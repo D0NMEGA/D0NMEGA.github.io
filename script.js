@@ -63,39 +63,41 @@ document.body.appendChild(renderer.domElement);
 
 camera.position.z = 0;
 
-// Post-processing for warp effect
-const composer = new THREE.EffectComposer(renderer);
-const renderPass = new THREE.RenderPass(scene, camera);
-composer.addPass(renderPass);
+let composer = null;
+if (typeof THREE.EffectComposer !== 'undefined') {
+    composer = new THREE.EffectComposer(renderer);
+    const renderPass = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderPass);
 
-const distortionShader = {
-    uniforms: {
-        'tDiffuse': { value: null },
-        'time': { value: 0 },
-        'distortion': { value: 0.1 }
-    },
-    vertexShader: `
-        varying vec2 vUv;
-        void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
-    fragmentShader: `
-        uniform sampler2D tDiffuse;
-        uniform float time;
-        uniform float distortion;
-        varying vec2 vUv;
-        void main() {
-            vec2 uv = vUv;
-            uv += vec2(sin(uv.y * 10.0 + time) * distortion, cos(uv.x * 10.0 + time) * distortion);
-            gl_FragColor = texture2D(tDiffuse, uv);
-        }
-    `
-};
-const distortionPass = new THREE.ShaderPass(distortionShader);
-distortionPass.enabled = false;
-composer.addPass(distortionPass);
+    const distortionShader = {
+        uniforms: {
+            'tDiffuse': { value: null },
+            'time': { value: 0 },
+            'distortion': { value: 0.1 }
+        },
+        vertexShader: `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform sampler2D tDiffuse;
+            uniform float time;
+            uniform float distortion;
+            varying vec2 vUv;
+            void main() {
+                vec2 uv = vUv;
+                uv += vec2(sin(uv.y * 10.0 + time) * distortion, cos(uv.x * 10.0 + time) * distortion);
+                gl_FragColor = texture2D(tDiffuse, uv);
+            }
+        `
+    };
+    const distortionPass = new THREE.ShaderPass(distortionShader);
+    distortionPass.enabled = false;
+    composer.addPass(distortionPass);
+}
 
 // Perlin instance
 const perlin = new Perlin();
@@ -168,7 +170,6 @@ class Tesseract {
             }
         }
 
-        // Simple 4D rotation (in xw plane for animation)
         const cos = Math.cos(time * 0.05);
         const sin = Math.sin(time * 0.05);
         vertices4D.forEach(v => {
@@ -237,7 +238,7 @@ window.addEventListener('resize', function() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    composer.setSize(window.innerWidth, window.innerHeight);
+    if (composer) composer.setSize(window.innerWidth, window.innerHeight);
 });
 
 // Animation loop
@@ -245,7 +246,8 @@ function animate() {
     requestAnimationFrame(animate);
     
     if (!isStarted) {
-        composer.render();
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
         return;
     }
     
@@ -253,9 +255,9 @@ function animate() {
 
     // Generative turns (enhanced for fractal feel)
     for (let i = 1; i < POINTS_COUNT - 1; i++) {
-        const noiseX = perlin.noise(time * 0.01 + i * 0.1, 0, 0) * 0.2; // Increased amplitude
+        const noiseX = perlin.noise(time * 0.01 + i * 0.1, 0, 0) * 0.2;
         const noiseY = perlin.noise(0, time * 0.01 + i * 0.1, 0) * 0.2;
-        curvePoints[i].x = noiseX + mouse.x * 0.2 * (i / POINTS_COUNT); // Increased mouse influence
+        curvePoints[i].x = noiseX + mouse.x * 0.2 * (i / POINTS_COUNT);
         curvePoints[i].y = noiseY + mouse.y * 0.2 * (i / POINTS_COUNT);
     }
 
@@ -265,13 +267,12 @@ function animate() {
         let branchOffsetX = 0;
         let branchOffsetY = 0;
         if (Math.abs(mouse.x) > Math.abs(mouse.y)) {
-            if (mouse.x > 0.3) branchOffsetX = 0.5; // Right
-            else if (mouse.x < -0.3) branchOffsetX = -0.5; // Left
+            if (mouse.x > 0.3) branchOffsetX = 0.5;
+            else if (mouse.x < -0.3) branchOffsetX = -0.5;
         } else {
-            if (mouse.y > 0.3) branchOffsetY = 0.5; // Up
-            else if (mouse.y < -0.3) branchOffsetY = -0.5; // Down
+            if (mouse.y > 0.3) branchOffsetY = 0.5;
+            else if (mouse.y < -0.3) branchOffsetY = -0.5;
         }
-        // Apply branch offset to curve for fractal turn
         for (let i = 1; i < POINTS_COUNT - 1; i++) {
             curvePoints[i].x += branchOffsetX * (Math.random() * 0.5 + 0.5);
             curvePoints[i].y += branchOffsetY * (Math.random() * 0.5 + 0.5);
@@ -287,23 +288,26 @@ function animate() {
     texture.offset.x += speed;
 
     // Tesseract update and warp check
-    tesseract.lines.position.z -= speed; // Move toward camera
+    tesseract.lines.position.z -= speed;
     if (tesseract.lines.position.z < -0.1) {
-        tesseract.lines.position.z = 2.5; // Reset ahead
+        tesseract.lines.position.z = 2.5;
     }
     tesseract.updateProjection();
-    if (Math.abs(tesseract.lines.position.z) < 0.1 && time - warpStart > 2) { // Run into
+    if (Math.abs(tesseract.lines.position.z) < 0.1 && time - warpStart > 2) {
         warpStart = time;
     }
-    if (time - warpStart < 2) { // Warp for 2 seconds
-        distortionPass.enabled = true;
-        distortionShader.uniforms.time.value = time * 5;
-        distortionShader.uniforms.distortion.value = 0.1 * (1 - (time - warpStart) / 2);
-    } else {
+    if (time - warpStart < 2) {
+        if (composer) {
+            distortionPass.enabled = true;
+            distortionShader.uniforms.time.value = time * 5;
+            distortionShader.uniforms.distortion.value = 0.1 * (1 - (time - warpStart) / 2);
+        }
+    } else if (composer) {
         distortionPass.enabled = false;
     }
 
-    composer.render();
+    if (composer) composer.render();
+    else renderer.render(scene, camera);
 }
 
 animate();
