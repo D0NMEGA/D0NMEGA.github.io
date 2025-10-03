@@ -22,4 +22,137 @@ class Perlin {
         return this.lerp(w, this.lerp(v, this.lerp(u, this.grad(this.p[AA], x, y, z), this.grad(this.p[BA], x - 1, y, z)),
                                this.lerp(u, this.grad(this.p[AB], x, y - 1, z), this.grad(this.p[BB], x - 1, y - 1, z)))),
                            this.lerp(v, this.lerp(u, this.grad(this.p[AA + 1], x, y, z - 1), this.grad(this.p[BA + 1], x - 1, y, z - 1)),
-                               this.lerp(u, this.gr
+                               this.lerp(u, this.grad(this.p[AB + 1], x, y - 1, z - 1), this.grad(this.p[BB + 1], x - 1, y - 1, z - 1))));
+    }
+    fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    lerp(t, a, b) { return a + t * (b - a); }
+    grad(hash, x, y, z) {
+        let h = hash & 15;
+        let u = h < 8 ? x : y, v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+        return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+    }
+}
+
+// Scene setup
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+console.log('Renderer created:', renderer.domElement);
+
+// Put camera back on +Z so it looks down -Z at objects with negative z
+camera.position.z = 5;
+camera.lookAt(0, 0, 0);
+
+// Perlin
+const perlin = new Perlin();
+let time = 0;
+
+// Tunnel params
+const TUBE_SEGMENTS = 70;
+const TUBE_RADIUS = 0.5;
+const POINTS_COUNT = 5;
+let curvePoints = [];
+// NOTE: make tube extend into negative Z so it's in front of the default camera view
+for (let i = 0; i < POINTS_COUNT; i++) {
+    curvePoints.push(new THREE.Vector3(0, 0, -2.5 * (i / (POINTS_COUNT - 1))));
+}
+let curve = new THREE.CatmullRomCurve3(curvePoints);
+
+// Procedural texture canvas (smaller canvas helps perf)
+const TEX_SIZE = 256;
+const canvas = document.createElement('canvas');
+canvas.width = TEX_SIZE; canvas.height = TEX_SIZE;
+const ctx = canvas.getContext('2d');
+// initial paint
+for (let x = 0; x < TEX_SIZE; x++) {
+    for (let y = 0; y < TEX_SIZE; y++) {
+        const noise = perlin.noise(x / 100, y / 100, time / 10);
+        ctx.fillStyle = `hsl(${noise * 360},50%,${30 + noise * 40}%)`;
+        ctx.fillRect(x, y, 1, 1);
+    }
+}
+const texture = new THREE.CanvasTexture(canvas);
+texture.wrapS = THREE.RepeatWrapping;
+texture.wrapT = THREE.RepeatWrapping;
+texture.repeat.set(30, 6);
+
+// Tube mesh
+const tubeGeometry = new THREE.TubeGeometry(curve, TUBE_SEGMENTS, TUBE_RADIUS, 50, false);
+const tubeMaterial = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
+const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+scene.add(tube);
+
+// Test cube
+const testCube = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.1),
+    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+);
+testCube.position.set(0, 0, -1);
+scene.add(testCube);
+
+let speed = 0.005;
+let mouse = { x: 0, y: 0 };
+
+// Input
+document.addEventListener('mousemove', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+document.addEventListener('touchmove', (e) => {
+    mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+});
+
+// Click to start audio
+const info = document.getElementById('info');
+const audio = document.getElementById('bgMusic');
+info.addEventListener('click', () => {
+    audio.play().then(() => console.log('Audio playing')).catch(e => console.error('Audio error:', e));
+    info.style.display = 'none';
+});
+
+// Resize
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Animation
+function animate() {
+    requestAnimationFrame(animate);
+    time += 1;
+
+    // update curve points with small perlin offsets
+    for (let i = 1; i < POINTS_COUNT - 1; i++) {
+        const noiseX = perlin.noise(time * 0.01 + i * 0.1, 0, 0) * 0.05;
+        const noiseY = perlin.noise(0, time * 0.01 + i * 0.1, 0) * 0.05;
+        // keep z along negative axis
+        curvePoints[i].x = noiseX + mouse.x * 0.1 * (i / POINTS_COUNT);
+        curvePoints[i].y = noiseY + mouse.y * 0.1 * (i / POINTS_COUNT);
+    }
+    curve = new THREE.CatmullRomCurve3(curvePoints);
+    // rebuild geometry (dispose old)
+    tube.geometry.dispose();
+    tube.geometry = new THREE.TubeGeometry(curve, TUBE_SEGMENTS, TUBE_RADIUS, 50, false);
+
+    // move texture to create flythrough
+    texture.offset.x += speed;
+    // minor texture animation without full redraw: only update some blocks to reduce cost
+    if (time % 2 === 0) {
+        const step = 8;
+        for (let x = 0; x < TEX_SIZE; x += step) {
+            for (let y = 0; y < TEX_SIZE; y += step) {
+                const noise = perlin.noise((x + time) / 150, (y + time) / 150, time / 40);
+                ctx.fillStyle = `hsl(${(noise * 360 + time) % 360},50%,${30 + noise * 40}%)`;
+                ctx.fillRect(x, y, step, step);
+            }
+        }
+        texture.needsUpdate = true;
+    }
+
+    renderer.render(scene, camera);
+}
+animate();
