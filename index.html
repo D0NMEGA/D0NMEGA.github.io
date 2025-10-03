@@ -2,17 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aphex Hallway Dive</title>
+    <title>Tunnel Experience</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+    <!-- Include THREE.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Include Post-Processing Library -->
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
 </head>
 <body>
+    <div id="info">Click to start the dive & music</div>
     <audio id="bgMusic" loop>
-        <source src="aphex-track.mp3" type="audio/mpeg">
+        <source src="path/to/your/audio.mp3" type="audio/mpeg">
         Your browser doesn't support audio.
     </audio>
-    <div id="info">Click to start the dive & music</div>
     <script src="script.js"></script>
 </body>
 </html>
