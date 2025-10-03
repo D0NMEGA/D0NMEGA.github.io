@@ -1,3 +1,7 @@
+// Debug logging
+console.log('Script loaded');
+console.log('THREE.js available:', typeof THREE !== 'undefined');
+
 // Simple Perlin noise
 class Perlin {
     constructor() {
@@ -55,30 +59,43 @@ class Perlin {
 }
 
 // Scene setup
+console.log('Creating scene...');
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-camera.position.z = 0;
+console.log('Renderer created, canvas size:', renderer.domElement.width, 'x', renderer.domElement.height);
+
+// FIXED: Camera position - move it back slightly so we're looking INTO the tunnel
+camera.position.z = -0.5;
+camera.position.y = 0;
+camera.position.x = 0;
+camera.lookAt(0, 0, 1);
+
+console.log('Camera position:', camera.position);
 
 // Perlin instance
 const perlin = new Perlin();
 let time = 0;
 let isStarted = false;
 
-// Tunnel params
+// Tunnel params - INCREASED RADIUS so it's more visible
 const TUBE_SEGMENTS = 70;
-const TUBE_RADIUS = 0.02;
+const TUBE_RADIUS = 0.5;  // Increased from 0.02 to 0.5
 const POINTS_COUNT = 5;
 let curvePoints = [];
 
 for (let i = 0; i < POINTS_COUNT; i++) {
-    curvePoints.push(new THREE.Vector3(0, 0, 2.5 * (i / (POINTS_COUNT - 1))));
+    curvePoints.push(new THREE.Vector3(0, 0, i * 1.5));  // Spread out more
 }
 
 let curve = new THREE.CatmullRomCurve3(curvePoints);
+
+console.log('Creating texture...');
 
 // Procedural texture
 const canvas = document.createElement('canvas');
@@ -90,7 +107,7 @@ function generateTexture() {
     for (let x = 0; x < 512; x++) {
         for (let y = 0; y < 512; y++) {
             const noise = perlin.noise(x / 100, y / 100, time / 10);
-            ctx.fillStyle = 'hsl(' + (noise * 360) + ', 50%, ' + (30 + noise * 40) + '%)';
+            ctx.fillStyle = 'hsl(' + (noise * 360) + ', 70%, ' + (40 + noise * 30) + '%)';
             ctx.fillRect(x, y, 1, 1);
         }
     }
@@ -101,15 +118,32 @@ generateTexture();
 const texture = new THREE.CanvasTexture(canvas);
 texture.wrapS = THREE.RepeatWrapping;
 texture.wrapT = THREE.RepeatWrapping;
-texture.repeat.set(30, 6);
+texture.repeat.set(4, 2);
+
+console.log('Creating tube geometry...');
 
 // Tube mesh
-const tubeGeometry = new THREE.TubeGeometry(curve, TUBE_SEGMENTS, TUBE_RADIUS, 50, false);
-const tubeMaterial = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
+const tubeGeometry = new THREE.TubeGeometry(curve, TUBE_SEGMENTS, TUBE_RADIUS, 32, false);
+const tubeMaterial = new THREE.MeshBasicMaterial({ 
+    map: texture, 
+    side: THREE.BackSide,
+    wireframe: false
+});
 const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
 scene.add(tube);
 
-let speed = 0.005;
+console.log('Tube added to scene');
+console.log('Scene children:', scene.children.length);
+
+// Add some test geometry to make sure rendering works
+const testGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+const testMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const testCube = new THREE.Mesh(testGeometry, testMaterial);
+testCube.position.set(0, 0, 2);
+scene.add(testCube);
+console.log('Test cube added');
+
+let speed = 0.01;
 let mouse = { x: 0, y: 0 };
 
 // Mouse listener
@@ -123,6 +157,7 @@ const info = document.getElementById('info');
 const audio = document.getElementById('bgMusic');
 
 info.addEventListener('click', function() {
+    console.log('Click detected!');
     audio.play().then(function() {
         console.log('Audio started successfully');
     }).catch(function(err) {
@@ -131,6 +166,7 @@ info.addEventListener('click', function() {
     
     info.style.display = 'none';
     isStarted = true;
+    console.log('Animation started');
 });
 
 // Resize handler
@@ -140,9 +176,20 @@ window.addEventListener('resize', function() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+let frameCount = 0;
+
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
+    
+    frameCount++;
+    if (frameCount === 1) {
+        console.log('First frame rendered');
+    }
+    
+    // Rotate test cube to verify rendering is working
+    testCube.rotation.x += 0.01;
+    testCube.rotation.y += 0.01;
     
     if (!isStarted) {
         renderer.render(scene, camera);
@@ -150,21 +197,30 @@ function animate() {
     }
     
     time += 1;
+    
+    if (time % 60 === 0) {
+        console.log('Frame:', time);
+    }
 
     // Generative turns
     for (let i = 1; i < POINTS_COUNT - 1; i++) {
-        const noiseX = perlin.noise(time * 0.01 + i * 0.1, 0, 0) * 0.05;
-        const noiseY = perlin.noise(0, time * 0.01 + i * 0.1, 0) * 0.05;
-        curvePoints[i].x = noiseX + mouse.x * 0.1 * (i / POINTS_COUNT);
-        curvePoints[i].y = noiseY + mouse.y * 0.1 * (i / POINTS_COUNT);
+        const noiseX = perlin.noise(time * 0.01 + i * 0.1, 0, 0) * 0.3;
+        const noiseY = perlin.noise(0, time * 0.01 + i * 0.1, 0) * 0.3;
+        curvePoints[i].x = noiseX + mouse.x * 0.2 * (i / POINTS_COUNT);
+        curvePoints[i].y = noiseY + mouse.y * 0.2 * (i / POINTS_COUNT);
     }
     
     curve = new THREE.CatmullRomCurve3(curvePoints);
     tube.geometry.dispose();
-    tube.geometry = new THREE.TubeGeometry(curve, TUBE_SEGMENTS, TUBE_RADIUS, 50, false);
+    tube.geometry = new THREE.TubeGeometry(curve, TUBE_SEGMENTS, TUBE_RADIUS, 32, false);
 
-    // Flythrough
-    texture.offset.x += speed;
+    // Move forward through the tunnel
+    camera.position.z += speed;
+    
+    // Reset position when we reach the end
+    if (camera.position.z > 5) {
+        camera.position.z = -0.5;
+    }
 
     // Animate texture
     if (time % 2 === 0) {
@@ -172,7 +228,7 @@ function animate() {
             for (let y = 0; y < 512; y += 10) {
                 const noise = perlin.noise(x / 100, y / 100, time / 10);
                 const hue = (noise * 360 + time % 360) % 360;
-                ctx.fillStyle = 'hsl(' + hue + ', 50%, ' + (30 + noise * 40) + '%)';
+                ctx.fillStyle = 'hsl(' + hue + ', 70%, ' + (40 + noise * 30) + '%)';
                 ctx.fillRect(x, y, 10, 10);
             }
         }
@@ -182,4 +238,5 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+console.log('Starting animation loop...');
 animate();
