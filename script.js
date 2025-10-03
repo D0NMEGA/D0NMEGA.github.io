@@ -1,4 +1,3 @@
-// Simple Perlin noise (adapted from public domain impl)
 class Perlin {
     constructor() {
         this.p = new Array(512);
@@ -40,6 +39,7 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+console.log('Renderer created:', renderer.domElement);
 
 camera.position.z = 0;
 
@@ -49,7 +49,7 @@ let time = 0;
 
 // Tunnel params
 const TUBE_SEGMENTS = 70;
-const TUBE_RADIUS = 0.02;
+const TUBE_RADIUS = 0.5; // Increased for visibility
 const POINTS_COUNT = 5;
 let curvePoints = [];
 for (let i = 0; i < POINTS_COUNT; i++) {
@@ -78,23 +78,37 @@ const tubeGeometry = new THREE.TubeGeometry(curve, TUBE_SEGMENTS, TUBE_RADIUS, 5
 const tubeMaterial = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
 const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
 scene.add(tube);
+console.log('Tube added to scene');
+
+// Test cube
+const testCube = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.1),
+    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+);
+testCube.position.set(0, 0, -1);
+scene.add(testCube);
+console.log('Test cube added');
 
 let speed = 0.005;
 let mouse = { x: 0, y: 0 };
 
-// Mouse listener
+// Mouse and touch listeners
 document.addEventListener('mousemove', (e) => {
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+document.addEventListener('touchmove', (e) => {
+    mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
 });
 
 // Click to start
 const info = document.getElementById('info');
 const audio = document.getElementById('bgMusic');
 info.addEventListener('click', () => {
-    audio.play();
+    console.log('Clicked! Attempting to play audio...');
+    audio.play().then(() => console.log('Audio playing')).catch(e => console.error('Audio error:', e));
     info.style.display = 'none';
-    document.body.requestPointerLock();
 });
 
 // Resize handler
