@@ -1,7 +1,3 @@
-// Debug logging
-console.log('Script loaded');
-console.log('THREE.js available:', typeof THREE !== 'undefined');
-
 // Simple Perlin noise
 class Perlin {
     constructor() {
@@ -59,92 +55,161 @@ class Perlin {
 }
 
 // Scene setup
-console.log('Creating scene...');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
-
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-console.log('Renderer created, canvas size:', renderer.domElement.width, 'x', renderer.domElement.height);
+camera.position.z = 0;
 
-// FIXED: Camera position - move it back slightly so we're looking INTO the tunnel
-camera.position.z = -0.5;
-camera.position.y = 0;
-camera.position.x = 0;
-camera.lookAt(0, 0, 1);
+// Post-processing for warp effect
+const composer = new THREE.EffectComposer(renderer);
+const renderPass = new THREE.RenderPass(scene, camera);
+composer.addPass(renderPass);
 
-console.log('Camera position:', camera.position);
+const distortionShader = {
+    uniforms: {
+        'tDiffuse': { value: null },
+        'time': { value: 0 },
+        'distortion': { value: 0.1 }
+    },
+    vertexShader: `
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float time;
+        uniform float distortion;
+        varying vec2 vUv;
+        void main() {
+            vec2 uv = vUv;
+            uv += vec2(sin(uv.y * 10.0 + time) * distortion, cos(uv.x * 10.0 + time) * distortion);
+            gl_FragColor = texture2D(tDiffuse, uv);
+        }
+    `
+};
+const distortionPass = new THREE.ShaderPass(distortionShader);
+distortionPass.enabled = false;
+composer.addPass(distortionPass);
 
 // Perlin instance
 const perlin = new Perlin();
 let time = 0;
 let isStarted = false;
+let warpStart = -Infinity;
 
-// Tunnel params - INCREASED RADIUS so it's more visible
+// Tunnel params
 const TUBE_SEGMENTS = 70;
-const TUBE_RADIUS = 0.5;  // Increased from 0.02 to 0.5
+const TUBE_RADIUS = 0.02;
 const POINTS_COUNT = 5;
 let curvePoints = [];
 
 for (let i = 0; i < POINTS_COUNT; i++) {
-    curvePoints.push(new THREE.Vector3(0, 0, i * 1.5));  // Spread out more
+    curvePoints.push(new THREE.Vector3(0, 0, 2.5 * (i / (POINTS_COUNT - 1))));
 }
 
 let curve = new THREE.CatmullRomCurve3(curvePoints);
 
-console.log('Creating texture...');
-
-// Procedural texture
-const canvas = document.createElement('canvas');
-canvas.width = 512;
-canvas.height = 512;
-const ctx = canvas.getContext('2d');
-
-function generateTexture() {
-    for (let x = 0; x < 512; x++) {
-        for (let y = 0; y < 512; y++) {
-            const noise = perlin.noise(x / 100, y / 100, time / 10);
-            ctx.fillStyle = 'hsl(' + (noise * 360) + ', 70%, ' + (40 + noise * 30) + '%)';
-            ctx.fillRect(x, y, 1, 1);
-        }
-    }
-}
-
-generateTexture();
-
-const texture = new THREE.CanvasTexture(canvas);
+// Load cement texture
+const loader = new THREE.TextureLoader();
+const texture = loader.load('https://t3.ftcdn.net/jpg/03/44/99/56/360_F_344995605_ZYccAvf3Dq5oiO8VsCdfXQr4VCFWI2Ph.jpg');
 texture.wrapS = THREE.RepeatWrapping;
 texture.wrapT = THREE.RepeatWrapping;
-texture.repeat.set(4, 2);
+texture.repeat.set(30, 6);
 
-console.log('Creating tube geometry...');
+// Square shape for boxy tunnel
+const shape = new THREE.Shape();
+shape.moveTo(-TUBE_RADIUS, -TUBE_RADIUS);
+shape.lineTo(TUBE_RADIUS, -TUBE_RADIUS);
+shape.lineTo(TUBE_RADIUS, TUBE_RADIUS);
+shape.lineTo(-TUBE_RADIUS, TUBE_RADIUS);
+shape.lineTo(-TUBE_RADIUS, -TUBE_RADIUS);
+
+// Extrude settings
+const extrudeSettings = {
+    steps: TUBE_SEGMENTS,
+    bevelEnabled: false,
+    extrudePath: curve
+};
 
 // Tube mesh
-const tubeGeometry = new THREE.TubeGeometry(curve, TUBE_SEGMENTS, TUBE_RADIUS, 32, false);
-const tubeMaterial = new THREE.MeshBasicMaterial({ 
-    map: texture, 
-    side: THREE.BackSide,
-    wireframe: false
-});
+const tubeGeometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+const tubeMaterial = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
 const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
 scene.add(tube);
 
-console.log('Tube added to scene');
-console.log('Scene children:', scene.children.length);
+// Tesseract class
+class Tesseract {
+    constructor(size = 0.01, d = 2) {
+        this.size = size;
+        this.d = d;
+        this.lines = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color: 0x00ff00}));
+        this.position = new THREE.Vector3(0, 0, 2.5); // Start far ahead
+        this.lines.position.copy(this.position);
+        this.updateProjection();
+        scene.add(this.lines);
+    }
 
-// Add some test geometry to make sure rendering works
-const testGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-const testMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const testCube = new THREE.Mesh(testGeometry, testMaterial);
-testCube.position.set(0, 0, 2);
-scene.add(testCube);
-console.log('Test cube added');
+    updateProjection() {
+        const half = this.size / 2;
+        const vertices4D = [];
+        for (let x = -1; x <= 1; x += 2) {
+            for (let y = -1; y <= 1; y += 2) {
+                for (let z = -1; z <= 1; z += 2) {
+                    for (let w = -1; w <= 1; w += 2) {
+                        vertices4D.push(new THREE.Vector4(x * half, y * half, z * half, w * half));
+                    }
+                }
+            }
+        }
 
-let speed = 0.01;
+        // Simple 4D rotation (in xw plane for animation)
+        const cos = Math.cos(time * 0.05);
+        const sin = Math.sin(time * 0.05);
+        vertices4D.forEach(v => {
+            const x = v.x * cos - v.w * sin;
+            const w = v.x * sin + v.w * cos;
+            v.x = x;
+            v.w = w;
+        });
+
+        const projected = vertices4D.map(v => {
+            const scale = this.d / (this.d - v.w);
+            return new THREE.Vector3(v.x * scale, v.y * scale, v.z * scale);
+        });
+
+        const indices = [];
+        for (let i = 0; i < 16; i++) {
+            for (let j = i + 1; j < 16; j++) {
+                let diff = 0;
+                const arrI = vertices4D[i].toArray();
+                const arrJ = vertices4D[j].toArray();
+                for (let k = 0; k < 4; k++) {
+                    if (arrI[k] !== arrJ[k]) diff++;
+                }
+                if (diff === 1) indices.push(i, j);
+            }
+        }
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(projected.flatMap(v => v.toArray()), 3));
+        geometry.setIndex(indices);
+        this.lines.geometry.dispose();
+        this.lines.geometry = geometry;
+    }
+}
+
+const tesseract = new Tesseract();
+
+let speed = 0.005;
 let mouse = { x: 0, y: 0 };
+let lastBranchTime = 0;
+const branchInterval = 4; // Every 4 seconds
 
 // Mouse listener
 document.addEventListener('mousemove', function(e) {
@@ -157,7 +222,6 @@ const info = document.getElementById('info');
 const audio = document.getElementById('bgMusic');
 
 info.addEventListener('click', function() {
-    console.log('Click detected!');
     audio.play().then(function() {
         console.log('Audio started successfully');
     }).catch(function(err) {
@@ -166,7 +230,6 @@ info.addEventListener('click', function() {
     
     info.style.display = 'none';
     isStarted = true;
-    console.log('Animation started');
 });
 
 // Resize handler
@@ -174,69 +237,73 @@ window.addEventListener('resize', function() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
 });
-
-let frameCount = 0;
 
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
     
-    frameCount++;
-    if (frameCount === 1) {
-        console.log('First frame rendered');
-    }
-    
-    // Rotate test cube to verify rendering is working
-    testCube.rotation.x += 0.01;
-    testCube.rotation.y += 0.01;
-    
     if (!isStarted) {
-        renderer.render(scene, camera);
+        composer.render();
         return;
     }
     
-    time += 1;
-    
-    if (time % 60 === 0) {
-        console.log('Frame:', time);
+    time += 0.016; // Approximate delta for 60fps
+
+    // Generative turns (enhanced for fractal feel)
+    for (let i = 1; i < POINTS_COUNT - 1; i++) {
+        const noiseX = perlin.noise(time * 0.01 + i * 0.1, 0, 0) * 0.2; // Increased amplitude
+        const noiseY = perlin.noise(0, time * 0.01 + i * 0.1, 0) * 0.2;
+        curvePoints[i].x = noiseX + mouse.x * 0.2 * (i / POINTS_COUNT); // Increased mouse influence
+        curvePoints[i].y = noiseY + mouse.y * 0.2 * (i / POINTS_COUNT);
     }
 
-    // Generative turns
-    for (let i = 1; i < POINTS_COUNT - 1; i++) {
-        const noiseX = perlin.noise(time * 0.01 + i * 0.1, 0, 0) * 0.3;
-        const noiseY = perlin.noise(0, time * 0.01 + i * 0.1, 0) * 0.3;
-        curvePoints[i].x = noiseX + mouse.x * 0.2 * (i / POINTS_COUNT);
-        curvePoints[i].y = noiseY + mouse.y * 0.2 * (i / POINTS_COUNT);
+    // Discrete branch/turn every 4 seconds based on mouse
+    if (time - lastBranchTime > branchInterval) {
+        lastBranchTime = time;
+        let branchOffsetX = 0;
+        let branchOffsetY = 0;
+        if (Math.abs(mouse.x) > Math.abs(mouse.y)) {
+            if (mouse.x > 0.3) branchOffsetX = 0.5; // Right
+            else if (mouse.x < -0.3) branchOffsetX = -0.5; // Left
+        } else {
+            if (mouse.y > 0.3) branchOffsetY = 0.5; // Up
+            else if (mouse.y < -0.3) branchOffsetY = -0.5; // Down
+        }
+        // Apply branch offset to curve for fractal turn
+        for (let i = 1; i < POINTS_COUNT - 1; i++) {
+            curvePoints[i].x += branchOffsetX * (Math.random() * 0.5 + 0.5);
+            curvePoints[i].y += branchOffsetY * (Math.random() * 0.5 + 0.5);
+        }
     }
     
     curve = new THREE.CatmullRomCurve3(curvePoints);
     tube.geometry.dispose();
-    tube.geometry = new THREE.TubeGeometry(curve, TUBE_SEGMENTS, TUBE_RADIUS, 32, false);
+    extrudeSettings.extrudePath = curve;
+    tube.geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
 
-    // Move forward through the tunnel
-    camera.position.z += speed;
-    
-    // Reset position when we reach the end
-    if (camera.position.z > 5) {
-        camera.position.z = -0.5;
+    // Flythrough
+    texture.offset.x += speed;
+
+    // Tesseract update and warp check
+    tesseract.lines.position.z -= speed; // Move toward camera
+    if (tesseract.lines.position.z < -0.1) {
+        tesseract.lines.position.z = 2.5; // Reset ahead
+    }
+    tesseract.updateProjection();
+    if (Math.abs(tesseract.lines.position.z) < 0.1 && time - warpStart > 2) { // Run into
+        warpStart = time;
+    }
+    if (time - warpStart < 2) { // Warp for 2 seconds
+        distortionPass.enabled = true;
+        distortionShader.uniforms.time.value = time * 5;
+        distortionShader.uniforms.distortion.value = 0.1 * (1 - (time - warpStart) / 2);
+    } else {
+        distortionPass.enabled = false;
     }
 
-    // Animate texture
-    if (time % 2 === 0) {
-        for (let x = 0; x < 512; x += 10) {
-            for (let y = 0; y < 512; y += 10) {
-                const noise = perlin.noise(x / 100, y / 100, time / 10);
-                const hue = (noise * 360 + time % 360) % 360;
-                ctx.fillStyle = 'hsl(' + hue + ', 70%, ' + (40 + noise * 30) + '%)';
-                ctx.fillRect(x, y, 10, 10);
-            }
-        }
-        texture.needsUpdate = true;
-    }
-
-    renderer.render(scene, camera);
+    composer.render();
 }
 
-console.log('Starting animation loop...');
 animate();
