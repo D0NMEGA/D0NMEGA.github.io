@@ -64,7 +64,8 @@ document.body.appendChild(renderer.domElement);
 camera.position.z = 0;
 
 let composer = null;
-if (typeof THREE.EffectComposer !== 'undefined') {
+let distortionPass = null;
+if (typeof THREE.EffectComposer !== 'undefined' && typeof THREE.RenderPass !== 'undefined' && typeof THREE.ShaderPass !== 'undefined') {
     composer = new THREE.EffectComposer(renderer);
     const renderPass = new THREE.RenderPass(scene, camera);
     composer.addPass(renderPass);
@@ -94,9 +95,10 @@ if (typeof THREE.EffectComposer !== 'undefined') {
             }
         `
     };
-    const distortionPass = new THREE.ShaderPass(distortionShader);
+    distortionPass = new THREE.ShaderPass(distortionShader);
     distortionPass.enabled = false;
     composer.addPass(distortionPass);
+    composer.setSize(window.innerWidth, window.innerHeight); // Initialize size
 }
 
 // Perlin instance
@@ -296,13 +298,11 @@ function animate() {
     if (Math.abs(tesseract.lines.position.z) < 0.1 && time - warpStart > 2) {
         warpStart = time;
     }
-    if (time - warpStart < 2) {
-        if (composer) {
-            distortionPass.enabled = true;
-            distortionShader.uniforms.time.value = time * 5;
-            distortionShader.uniforms.distortion.value = 0.1 * (1 - (time - warpStart) / 2);
-        }
-    } else if (composer) {
+    if (time - warpStart < 2 && composer && distortionPass) {
+        distortionPass.enabled = true;
+        distortionPass.uniforms.time.value = time * 5;
+        distortionPass.uniforms.distortion.value = 0.1 * (1 - (time - warpStart) / 2);
+    } else if (composer && distortionPass) {
         distortionPass.enabled = false;
     }
 
