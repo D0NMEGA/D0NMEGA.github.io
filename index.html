@@ -3,16 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aphex Hallway Dive</title>
+    <title>Test</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-    <audio id="bgMusic" loop>
+    <audio id="bgMusic" controls>
         <source src="aphex-track.mp3" type="audio/mpeg">
-        Your browser doesn't support audio.
     </audio>
-    <div id="info">Click to start the dive & music</div>
-    <script src="script.js"></script>
+    <div id="info">Click to start</div>
+    <script>
+        const info = document.getElementById('info');
+        const audio = document.getElementById('bgMusic');
+        info.addEventListener('click', () => {
+            console.log('Clicked! Playing audio...');
+            audio.play().then(() => console.log('Audio playing')).catch(e => console.error('Audio error:', e));
+            info.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
