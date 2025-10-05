@@ -1,34 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Infinite Hallway</title>
-    <style>
-      body { margin: 0; overflow: hidden; background: black; }
-      #start {
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        font-family: sans-serif;
-        font-size: 2em;
-        cursor: pointer;
+<head>
+  <meta charset="utf-8">
+  <title>Infinite Hallway</title>
+  <style>
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      background: black; 
+    }
+    #start {
+      position: absolute;
+      top: 50%; 
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-family: sans-serif;
+      font-size: 2em;
+      cursor: pointer;
+      padding: 20px 40px;
+      border: 2px solid #888;
+      background: rgba(0,0,0,0.7);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    #start:hover {
+      background: rgba(50,50,50,0.8);
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
       }
-    </style>
+    }
+  </script>
+</head>
+<body>
+  <div id="start">ENTER</div>
+  
+  <script type="module">
+    import * as THREE from 'three';
 
-    <!-- ✅ Import map for Three.js -->
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    let scene, camera, renderer;
+    let hallSegments = [];
+    let moveSpeed = 0.15;
+    let active = false;
+    let audio;
+
+    const startBtn = document.getElementById('start');
+    startBtn.addEventListener('click', init);
+
+    function init() {
+      startBtn.style.display = 'none';
+
+      // Initialize audio
+      audio = new Audio('./aphex-track.mp3');
+      audio.loop = true;
+      audio.volume = 0.5;
+      
+      // Play audio (user interaction allows autoplay)
+      audio.play().catch(err => {
+        console.log('Audio playback failed:', err);
+      });
+
+      // Scene setup
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x111111);
+      scene.fog = new THREE.Fog(0x111111, 10, 80);
+
+      camera = new THREE.PerspectiveCamera(
+        75, 
+        window.innerWidth / window.innerHeight, 
+        0.1, 
+        1000
+      );
+      camera.position.set(0, 0, 0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight.position.set(0, 5, 10);
+      scene.add(directionalLight);
+
+      // Generate hallway segments
+      for (let i = 0; i < 15; i++) {
+        addHallSegment(i * -20);
+      }
+
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      active = true;
+      animate();
+    }
+
+    function addHallSegment(z) {
+      const width = 8;
+      const height = 8;
+      const depth = 20;
+
+      // Concrete texture material
+      const material = new THREE.MeshStandardMaterial({ 
+        color: 0x666666,
+        roughness: 0.9,
+        metalness: 0.1,
+        side: THREE.DoubleSide
+      });
+
+      // Create hallway as individual walls (floor, ceiling, left, right)
+      const group = new THREE.Group();
+
+      // Floor
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, depth),
+        material
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -height / 2;
+      group.add(floor);
+
+      // Ceiling
+      const ceiling = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, depth),
+        material
+      );
+      ceiling.rotation.x = Math.PI / 2;
+      ceiling.position.y = height / 2;
+      group.add(ceiling);
+
+      // Left wall
+      const leftWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(depth, height),
+        material
+      );
+      leftWall.rotation.y = Math.PI / 2;
+      leftWall.position.x = -width / 2;
+      group.add(leftWall);
+
+      // Right wall
+      const rightWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(depth, height),
+        material
+      );
+      rightWall.rotation.y = -Math.PI / 2;
+      rightWall.position.x = width / 2;
+      group.add(rightWall);
+
+      group.position.z = z;
+      scene.add(group);
+      hallSegments.push(group);
+    }
+
+    function animate() {
+      if (!active) return;
+      requestAnimationFrame(animate);
+
+      // Move camera forward
+      camera.position.z -= moveSpeed;
+
+      // Recycle segments that are behind the camera
+      hallSegments.forEach(seg => {
+        if (seg.position.z - camera.position.z > 20) {
+          seg.position.z -= 300;
         }
-      }
-    </script>
-  </head>
+      });
 
-  <body>
-    <div id="start">ENTER</div>
-    <script type="module" src="./script.js"></script>
-  </body>
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>
 </html>
