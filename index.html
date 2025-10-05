@@ -1,22 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Tunnel Experience</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Include THREE.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Include Post-Processing Library -->
-    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <meta charset="utf-8" />
+  <title>Endless Hallway</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
 </head>
 <body>
-    <div id="info">Click to start the dive & music</div>
-    <audio id="bgMusic" loop>
-        <source src="aphex-track.mp3" type="audio/mpeg">
-        Your browser doesn't support audio.
-    </audio>
-    <script src="script.js"></script>
+  <div id="info">Click to start — music + hallway</div>
+
+  <!-- Put your audio file next to these files and name it "aphex-track.mp3"
+       or change the src to your file. -->
+  <audio id="bgMusic" loop>
+    <source src="aphex-track.mp3" type="audio/mpeg" />
+    Your browser doesn't support audio.
+  </audio>
+
+  <script src="script.js"></script>
 </body>
 </html>
