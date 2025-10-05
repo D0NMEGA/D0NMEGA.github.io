@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Endless Hallway</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="style.css" />
-  <!-- Three.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
-</head>
-<body>
-  <div id="info">Click to start — music + hallway</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Infinite Hallway</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: black;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Your clickable text (optional) -->
+    <div id="start" style="
+      position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      color:white;font-family:sans-serif;font-size:2em;
+      cursor:pointer;">ENTER</div>
 
-  <!-- Put your audio file next to these files and name it "aphex-track.mp3"
-       or change the src to your file. -->
-  <audio id="bgMusic" loop>
-    <source src="aphex-track.mp3" type="audio/mpeg" />
-    Your browser doesn't support audio.
-  </audio>
+    <!-- ✅ Load Three.js from official CDN first -->
+    <script src="https://unpkg.com/three@0.159.0/build/three.min.js"></script>
 
-  <script src="script.js"></script>
-</body>
+    <!-- ✅ Then load your own code -->
+    <script src="script.js"></script>
+  </body>
 </html>
