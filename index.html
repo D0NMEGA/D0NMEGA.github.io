@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <title>Infinite Hallway</title>
   <style>
-    body { 
-      margin: 0; 
-      overflow: hidden; 
-      background: black; 
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
     }
     #start {
       position: absolute;
-      top: 50%; 
+      top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       color: white;
@@ -44,10 +44,17 @@
     import * as THREE from 'three';
 
     let scene, camera, renderer;
-    let hallSegments = [];
-    let moveSpeed = 0.15;
     let active = false;
     let audio;
+    
+    let moveSpeed = 0.31;
+    
+    let segments = [];
+    let currentSegment = 0;
+    let distanceInSegment = 0;
+    
+    const HALLWAY_WIDTH = 6;
+    const HALLWAY_HEIGHT = 6;
 
     const startBtn = document.getElementById('start');
     startBtn.addEventListener('click', init);
@@ -55,47 +62,32 @@
     function init() {
       startBtn.style.display = 'none';
 
-      // Initialize audio
       audio = new Audio('./aphex-track.mp3');
       audio.loop = true;
       audio.volume = 0.5;
-      
-      // Play audio (user interaction allows autoplay)
-      audio.play().catch(err => {
-        console.log('Audio playback failed:', err);
-      });
+      audio.play().catch(err => console.log('Audio playback failed:', err));
 
-      // Scene setup
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x111111);
-      scene.fog = new THREE.Fog(0x111111, 10, 80);
+      scene.background = new THREE.Color(0x1a1a1a);
+      scene.fog = new THREE.Fog(0x1a1a1a, 1, 35);
 
-      camera = new THREE.PerspectiveCamera(
-        75, 
-        window.innerWidth / window.innerHeight, 
-        0.1, 
-        1000
-      );
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
       camera.position.set(0, 0, 0);
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
       scene.add(ambientLight);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-      directionalLight.position.set(0, 5, 10);
-      scene.add(directionalLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+      directionalLight.position.set(0, 5, 0);
+      camera.add(directionalLight);
+      scene.add(camera);
 
-      // Generate hallway segments
-      for (let i = 0; i < 15; i++) {
-        addHallSegment(i * -20);
-      }
+      createInitialPath();
 
-      // Handle window resize
       window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -106,12 +98,20 @@
       animate();
     }
 
-    function addHallSegment(z) {
-      const width = 8;
-      const height = 8;
-      const depth = 20;
+    function createInitialPath() {
+      let pos = new THREE.Vector3(0, 0, 0);
+      let dir = new THREE.Vector3(0, 0, -1);
+      
+      for (let i = 0; i < 25; i++) {
+        const length = 15 + Math.random() * 5;
+        const nextDir = getPerpendicularDirection(dir);
+        addSegment(pos, dir, length, nextDir);
+        pos = pos.clone().add(dir.clone().multiplyScalar(length)).add(nextDir.clone().multiplyScalar(HALLWAY_WIDTH / 2));
+        dir = nextDir;
+      }
+    }
 
-      // Concrete texture material
+    function addSegment(startPos, direction, length, nextDirection) {
       const material = new THREE.MeshStandardMaterial({ 
         color: 0x666666,
         roughness: 0.9,
@@ -119,63 +119,196 @@
         side: THREE.DoubleSide
       });
 
-      // Create hallway as individual walls (floor, ceiling, left, right)
       const group = new THREE.Group();
+      
+      const q = new THREE.Quaternion();
+      if (Math.abs(direction.x) > 0.9) {
+        q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), direction.x > 0 ? -Math.PI / 2 : Math.PI / 2);
+      } else if (Math.abs(direction.y) > 0.9) {
+        q.setFromAxisAngle(new THREE.Vector3(1, 0, 0), direction.y > 0 ? Math.PI / 2 : -Math.PI / 2);
+      } else if (direction.z > 0.9) {
+        q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+      }
 
-      // Floor
-      const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(width, depth),
-        material
-      );
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.y = -height / 2;
-      group.add(floor);
+      let turnSide = null;
+      if (nextDirection) {
+        const localNextDir = nextDirection.clone().applyQuaternion(q.clone().invert());
+        if (Math.abs(localNextDir.x) > 0.9) {
+          turnSide = localNextDir.x > 0 ? 'right' : 'left';
+        } else if (Math.abs(localNextDir.y) > 0.9) {
+          turnSide = localNextDir.y > 0 ? 'ceiling' : 'floor';
+        }
+      }
 
-      // Ceiling
-      const ceiling = new THREE.Mesh(
-        new THREE.PlaneGeometry(width, depth),
-        material
-      );
-      ceiling.rotation.x = Math.PI / 2;
-      ceiling.position.y = height / 2;
-      group.add(ceiling);
-
-      // Left wall
-      const leftWall = new THREE.Mesh(
-        new THREE.PlaneGeometry(depth, height),
-        material
-      );
-      leftWall.rotation.y = Math.PI / 2;
-      leftWall.position.x = -width / 2;
-      group.add(leftWall);
-
-      // Right wall
-      const rightWall = new THREE.Mesh(
-        new THREE.PlaneGeometry(depth, height),
-        material
-      );
-      rightWall.rotation.y = -Math.PI / 2;
-      rightWall.position.x = width / 2;
-      group.add(rightWall);
-
-      group.position.z = z;
+      // Build hallway as connected planes along the direction
+      const numPieces = Math.max(3, Math.ceil(length / 3));
+      const pieceLength = length / numPieces;
+      const openingSize = HALLWAY_WIDTH;
+      const skipCount = Math.ceil(openingSize / pieceLength);
+      
+      for (let i = 0; i < numPieces; i++) {
+        const isSkip = (i >= numPieces - skipCount) && turnSide !== null;
+        const offset = i * pieceLength;
+        const localGroup = new THREE.Group();
+        
+        // Floor
+        if (!isSkip || turnSide !== 'floor') {
+          const floor = new THREE.Mesh(
+            new THREE.PlaneGeometry(HALLWAY_WIDTH, pieceLength),
+            material
+          );
+          floor.rotation.x = -Math.PI / 2;
+          floor.position.y = -HALLWAY_HEIGHT / 2;
+          localGroup.add(floor);
+        }
+        
+        // Ceiling
+        if (!isSkip || turnSide !== 'ceiling') {
+          const ceiling = new THREE.Mesh(
+            new THREE.PlaneGeometry(HALLWAY_WIDTH, pieceLength),
+            material
+          );
+          ceiling.rotation.x = Math.PI / 2;
+          ceiling.position.y = HALLWAY_HEIGHT / 2;
+          localGroup.add(ceiling);
+        }
+        
+        // Left wall
+        if (!isSkip || turnSide !== 'left') {
+          const leftWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(pieceLength, HALLWAY_HEIGHT),
+            material
+          );
+          leftWall.rotation.y = Math.PI / 2;
+          leftWall.position.x = -HALLWAY_WIDTH / 2;
+          localGroup.add(leftWall);
+        }
+        
+        // Right wall
+        if (!isSkip || turnSide !== 'right') {
+          const rightWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(pieceLength, HALLWAY_HEIGHT),
+            material
+          );
+          rightWall.rotation.y = -Math.PI / 2;
+          rightWall.position.x = HALLWAY_WIDTH / 2;
+          localGroup.add(rightWall);
+        }
+        
+        localGroup.position.z = -(offset + pieceLength / 2);
+        group.add(localGroup);
+      }
+      
+      // Add end wall
+      if (nextDirection) {
+        const endWall = new THREE.Mesh(
+          new THREE.PlaneGeometry(HALLWAY_WIDTH, HALLWAY_HEIGHT),
+          material
+        );
+        endWall.position.z = -length;
+        group.add(endWall);
+      }
+      
+      // Position and orient the entire segment
+      group.position.copy(startPos);
+      group.rotation.setFromQuaternion(q);
+      
       scene.add(group);
-      hallSegments.push(group);
+      
+      const endPoint = startPos.clone().add(direction.clone().multiplyScalar(length));
+      
+      segments.push({
+        mesh: group,
+        start: startPos.clone(),
+        end: endPoint,
+        direction: direction.clone(),
+        length: length,
+        index: segments.length
+      });
+    }
+
+    function getPerpendicularDirection(dir) {
+      const options = [];
+      
+      if (Math.abs(dir.z) > 0.9) {
+        options.push(new THREE.Vector3(1, 0, 0));
+        options.push(new THREE.Vector3(-1, 0, 0));
+        options.push(new THREE.Vector3(0, 1, 0));
+        options.push(new THREE.Vector3(0, -1, 0));
+      } else if (Math.abs(dir.x) > 0.9) {
+        options.push(new THREE.Vector3(0, 0, 1));
+        options.push(new THREE.Vector3(0, 0, -1));
+        options.push(new THREE.Vector3(0, 1, 0));
+        options.push(new THREE.Vector3(0, -1, 0));
+      } else {
+        options.push(new THREE.Vector3(1, 0, 0));
+        options.push(new THREE.Vector3(-1, 0, 0));
+        options.push(new THREE.Vector3(0, 0, 1));
+        options.push(new THREE.Vector3(0, 0, -1));
+      }
+      
+      return options[Math.floor(Math.random() * options.length)];
     }
 
     function animate() {
       if (!active) return;
       requestAnimationFrame(animate);
 
-      // Move camera forward
-      camera.position.z -= moveSpeed;
-
-      // Recycle segments that are behind the camera
-      hallSegments.forEach(seg => {
-        if (seg.position.z - camera.position.z > 20) {
-          seg.position.z -= 300;
+      if (currentSegment >= segments.length) return;
+      
+      const seg = segments[currentSegment];
+      distanceInSegment += moveSpeed;
+      
+      const progress = Math.min(distanceInSegment / seg.length, 1);
+      
+      let pos = new THREE.Vector3().lerpVectors(seg.start, seg.end, progress);
+      
+      let quat = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 0, -1),
+        seg.direction
+      );
+      
+      // Smooth rotation and position shift near end
+      if (progress > 0.75 && currentSegment < segments.length - 1) {
+        const nextSeg = segments[currentSegment + 1];
+        const turnProgress = (progress - 0.75) / 0.25;
+        const smoothTurn = turnProgress * turnProgress * (3 - 2 * turnProgress);
+        
+        const q2 = new THREE.Quaternion().setFromUnitVectors(
+          new THREE.Vector3(0, 0, -1),
+          nextSeg.direction
+        );
+        
+        quat.slerp(q2, smoothTurn);
+        
+        pos.add(nextSeg.direction.clone().multiplyScalar(smoothTurn * HALLWAY_WIDTH / 2));
+      }
+      
+      camera.position.copy(pos);
+      camera.quaternion.copy(quat);
+      
+      // Move to next segment
+      if (progress >= 1) {
+        currentSegment++;
+        distanceInSegment = 0;
+        
+        // Generate new segments
+        if (currentSegment > segments.length - 20) {
+          const lastSeg = segments[segments.length - 1];
+          const newLength = 15 + Math.random() * 5;
+          const newDir = getPerpendicularDirection(lastSeg.direction);
+          const newStart = lastSeg.end.clone().add(newDir.clone().multiplyScalar(HALLWAY_WIDTH / 2));
+          addSegment(newStart, newDir, newLength, getPerpendicularDirection(newDir));
         }
-      });
+        
+        // Remove old segments
+        segments.forEach((s, i) => {
+          if (i < currentSegment - 5 && s.mesh) {
+            scene.remove(s.mesh);
+            s.mesh = null;
+          }
+        });
+      }
 
       renderer.render(scene, camera);
     }
