@@ -16,13 +16,10 @@
       --accent: #ff3333;
       --accent-dim: rgba(255, 51, 51, 0.06);
       --text: #e0e0e0;
-      --text-dim: #666;
       --mono: 'JetBrains Mono', monospace;
       --sans: 'Space Grotesk', sans-serif;
       --heading: 'Archivo', sans-serif;
     }
-
-    html { font-size: 16px; }
 
     body {
       min-height: 100vh;
@@ -30,12 +27,11 @@
       font-family: var(--sans);
       color: var(--text);
       overflow: hidden;
-      cursor: default;
       user-select: none;
       -webkit-user-select: none;
     }
 
-    /* ---------- layout ---------- */
+    /* layout */
     .viewport {
       position: fixed;
       inset: 0;
@@ -46,15 +42,13 @@
       padding: 24px;
     }
 
-    /* three.js canvas */
     #brain-canvas {
       position: fixed;
       inset: 0;
       z-index: 0;
-      pointer-events: none;
     }
 
-    /* ---------- ambient ---------- */
+    /* ambient */
     .glow {
       position: fixed;
       border-radius: 50%;
@@ -65,7 +59,40 @@
     .glow--a { width: 500px; height: 500px; background: var(--accent); opacity: 0.06; top: -10%; left: 55%; }
     .glow--b { width: 400px; height: 400px; background: #2244ff; opacity: 0.04; bottom: -5%; left: 10%; }
 
-    /* ---------- card ---------- */
+    /* loading */
+    #loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      z-index: 100;
+      transition: opacity 0.6s;
+    }
+    #loader.hidden { opacity: 0; pointer-events: none; }
+    .loader-text {
+      font: 600 11px/1 var(--mono);
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .loader-bar {
+      width: 180px; height: 2px;
+      background: #111;
+      margin-top: 16px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .loader-bar__fill {
+      width: 0%;
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+
+    /* card */
     .scene {
       perspective: 1200px;
       z-index: 2;
@@ -94,7 +121,6 @@
         0 0 50px var(--accent-dim);
     }
 
-    /* conic edge glow */
     .card__face::after {
       content: '';
       position: absolute;
@@ -112,7 +138,6 @@
     @property --glow-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
     @keyframes edgeSpin { to { --glow-angle: 360deg; } }
 
-    /* status line */
     .status {
       display: flex;
       align-items: center;
@@ -131,42 +156,17 @@
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    .card__name {
-      font: 700 28px/1.1 var(--heading);
-      color: #fff;
-      letter-spacing: -0.03em;
-      margin-bottom: 2px;
-    }
-    .card__handle {
-      font: 400 13px/1 var(--mono);
-      color: var(--accent);
-      margin-bottom: 18px;
-    }
-
-    .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,51,51,0.25), transparent);
-      margin: 14px 0;
-    }
-
-    .card__bio {
-      font: 400 13px/1.65 var(--sans);
-      color: #888;
-      margin-bottom: 18px;
-    }
+    .card__name { font: 700 28px/1.1 var(--heading); color: #fff; letter-spacing: -0.03em; margin-bottom: 2px; }
+    .card__handle { font: 400 13px/1 var(--mono); color: var(--accent); margin-bottom: 18px; }
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,51,51,0.25), transparent); margin: 14px 0; }
+    .card__bio { font: 400 13px/1.65 var(--sans); color: #888; margin-bottom: 18px; }
     .card__bio strong { color: #bbb; }
 
-    /* meta rows */
     .meta { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-    .meta__row {
-      display: flex;
-      gap: 10px;
-      font: 400 11px/1.4 var(--mono);
-    }
+    .meta__row { display: flex; gap: 10px; font: 400 11px/1.4 var(--mono); }
     .meta__key { color: #444; min-width: 64px; }
     .meta__val { color: #999; }
 
-    /* tags */
     .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
     .tag {
       font: 400 9px/1 var(--mono);
@@ -178,12 +178,8 @@
       background: var(--accent-dim);
       transition: background 0.3s, box-shadow 0.3s;
     }
-    .tag:hover {
-      background: rgba(255,51,51,0.12);
-      box-shadow: 0 0 10px rgba(255,51,51,0.12);
-    }
+    .tag:hover { background: rgba(255,51,51,0.12); box-shadow: 0 0 10px rgba(255,51,51,0.12); }
 
-    /* cta */
     .cta {
       display: inline-flex;
       align-items: center;
@@ -197,14 +193,10 @@
       background: var(--accent-dim);
       transition: all 0.3s;
     }
-    .cta:hover {
-      background: rgba(255,51,51,0.12);
-      box-shadow: 0 0 18px rgba(255,51,51,0.15);
-    }
+    .cta:hover { background: rgba(255,51,51,0.12); box-shadow: 0 0 18px rgba(255,51,51,0.15); }
     .cta:hover .cta__arrow { transform: translateX(3px); }
     .cta__arrow { transition: transform 0.3s; }
 
-    /* ---------- brain label ---------- */
     .brain-label {
       position: fixed;
       bottom: 20px;
@@ -219,7 +211,6 @@
     }
     @keyframes labelPulse { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
 
-    /* attribution */
     .attr {
       position: fixed;
       top: 16px;
@@ -232,18 +223,13 @@
     .attr a { color: #333; text-decoration: none; }
     .attr a:hover { color: var(--accent); }
 
-    /* reduced motion */
     @media (prefers-reduced-motion: reduce) {
-      .card__face::after { animation: none; }
-      .status__dot { animation: none; }
-      .brain-label { animation: none; opacity: 0.5; }
+      .card__face::after, .status__dot, .brain-label { animation: none; }
     }
 
-    /* responsive */
     @media (max-width: 900px) {
       .viewport { flex-direction: column-reverse; gap: 20px; overflow-y: auto; }
       .card { width: min(380px, 90vw); }
-      #brain-canvas { position: relative; width: 100%; height: 320px; pointer-events: auto; }
     }
   </style>
   <script type="importmap">
@@ -252,16 +238,18 @@
 </head>
 <body>
 
+  <div id="loader">
+    <div class="loader-text">Loading fsaverage5 cortical mesh</div>
+    <div class="loader-bar"><div class="loader-bar__fill" id="loader-fill"></div></div>
+  </div>
+
   <div class="glow glow--a"></div>
   <div class="glow glow--b"></div>
 
   <canvas id="brain-canvas"></canvas>
 
   <div class="viewport">
-    <!-- 3D brain takes the left half via Three.js canvas -->
     <div style="flex:1;min-width:200px;pointer-events:all;cursor:grab;" id="brain-zone"></div>
-
-    <!-- card -->
     <div class="scene">
       <div class="card" id="card">
         <div class="card__face" id="card-face">
@@ -296,254 +284,203 @@
     </div>
   </div>
 
-  <div class="brain-label">drag brain to rotate &middot; inspired by facebookresearch/tribev2</div>
+  <div class="brain-label">drag brain to rotate &middot; fsaverage5 mesh via facebookresearch/tribev2</div>
   <div class="attr"><a href="https://github.com/D0NMEGA" target="_blank">D0NMEGA</a></div>
 
   <script type="module">
     import * as THREE from 'three';
 
-    // ---- simplex noise (compact 3D) ----
-    const F3 = 1/3, G3 = 1/6;
-    const grad3 = [[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],[1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],[0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
-    const perm = new Uint8Array(512);
-    { const p = []; for(let i=0;i<256;i++) p[i]=i; for(let i=255;i>0;i--){const j=Math.floor(Math.random()*(i+1));[p[i],p[j]]=[p[j],p[i]];} for(let i=0;i<512;i++) perm[i]=p[i&255]; }
-    function simplex3(x,y,z){
-      let s=(x+y+z)*F3, i=Math.floor(x+s), j=Math.floor(y+s), k=Math.floor(z+s);
-      let t=(i+j+k)*G3, X0=i-t, Y0=j-t, Z0=k-t, x0=x-X0, y0=y-Y0, z0=z-Z0;
-      let i1,j1,k1,i2,j2,k2;
-      if(x0>=y0){if(y0>=z0){i1=1;j1=0;k1=0;i2=1;j2=1;k2=0;}else if(x0>=z0){i1=1;j1=0;k1=0;i2=1;j2=0;k2=1;}else{i1=0;j1=0;k1=1;i2=1;j2=0;k2=1;}}
-      else{if(y0<z0){i1=0;j1=0;k1=1;i2=0;j2=1;k2=1;}else if(x0<z0){i1=0;j1=1;k1=0;i2=0;j2=1;k2=1;}else{i1=0;j1=1;k1=0;i2=1;j2=1;k2=0;}}
-      let x1=x0-i1+G3, y1=y0-j1+G3, z1=z0-k1+G3;
-      let x2=x0-i2+2*G3, y2=y0-j2+2*G3, z2=z0-k2+2*G3;
-      let x3=x0-1+3*G3, y3=y0-1+3*G3, z3=z0-1+3*G3;
-      let ii=i&255, jj=j&255, kk=k&255;
-      let n=0;
-      let t0=0.6-x0*x0-y0*y0-z0*z0; if(t0>0){t0*=t0;const g=grad3[perm[ii+perm[jj+perm[kk]]]%12];n+=t0*t0*(g[0]*x0+g[1]*y0+g[2]*z0);}
-      let t1=0.6-x1*x1-y1*y1-z1*z1; if(t1>0){t1*=t1;const g=grad3[perm[ii+i1+perm[jj+j1+perm[kk+k1]]]%12];n+=t1*t1*(g[0]*x1+g[1]*y1+g[2]*z1);}
-      let t2=0.6-x2*x2-y2*y2-z2*z2; if(t2>0){t2*=t2;const g=grad3[perm[ii+i2+perm[jj+j2+perm[kk+k2]]]%12];n+=t2*t2*(g[0]*x2+g[1]*y2+g[2]*z2);}
-      let t3=0.6-x3*x3-y3*y3-z3*z3; if(t3>0){t3*=t3;const g=grad3[perm[ii+1+perm[jj+1+perm[kk+1]]]%12];n+=t3*t3*(g[0]*x3+g[1]*y3+g[2]*z3);}
-      return 32*n;
-    }
+    // ---- load real brain mesh ----
+    const loaderFill = document.getElementById('loader-fill');
+    const loaderEl = document.getElementById('loader');
 
-    // ---- scene setup ----
+    loaderFill.style.width = '20%';
+
+    const resp = await fetch('./brain-mesh.json');
+    loaderFill.style.width = '60%';
+    const meshData = await resp.json();
+    loaderFill.style.width = '90%';
+
+    // ---- renderer ----
     const canvas = document.getElementById('brain-canvas');
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.3;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(-3.5, 0.3, 3);
-    camera.lookAt(-1.2, 0, 0);
+    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(-110, 15, 90);
+    camera.lookAt(-30, 0, 0);
 
-    // lighting
-    const ambient = new THREE.AmbientLight(0x444466, 0.6);
-    scene.add(ambient);
+    // ---- lights ----
+    scene.add(new THREE.AmbientLight(0x444466, 0.5));
 
     const keyLight = new THREE.DirectionalLight(0xffeedd, 1.0);
-    keyLight.position.set(3, 4, 5);
+    keyLight.position.set(80, 100, 120);
     scene.add(keyLight);
 
-    const rimLight = new THREE.PointLight(0xff3333, 2.5, 12);
-    rimLight.position.set(-4, 2, -3);
+    const rimLight = new THREE.PointLight(0xff3333, 3.0, 300);
+    rimLight.position.set(-120, 50, -80);
     scene.add(rimLight);
 
-    const fillLight = new THREE.PointLight(0x3344ff, 0.8, 10);
-    fillLight.position.set(3, -2, 2);
+    const fillLight = new THREE.PointLight(0x3344ff, 0.6, 250);
+    fillLight.position.set(80, -60, 60);
     scene.add(fillLight);
 
-    // ---- build brain ----
-    function createBrainHemisphere(side) {
-      const geo = new THREE.IcosahedronGeometry(1.0, 5);
-      const pos = geo.attributes.position;
-      const colors = new Float32Array(pos.count * 3);
-      const basePositions = new Float32Array(pos.count * 3);
-
-      for (let i = 0; i < pos.count; i++) {
-        let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-
-        // flatten into hemisphere
-        if (side === 'left' && x > 0.08) x = 0.08;
-        if (side === 'right' && x < -0.08) x = -0.08;
-
-        // normalize to sphere surface
-        const len = Math.sqrt(x*x + y*y + z*z) || 1;
-        x /= len; y /= len; z /= len;
-
-        // brain-like shape: elongated, wider at top
-        const brainScale = 1.0
-          + 0.15 * Math.abs(z)                     // elongate front-back
-          - 0.1 * y * y                             // flatten top/bottom slightly
-          + 0.08 * Math.max(0, y);                  // bulge at top (parietal)
-
-        x *= brainScale;
-        y *= brainScale;
-        z *= brainScale;
-
-        // sulci/gyri: multi-octave noise displacement
-        const nx = x * 2.8, ny = y * 2.8, nz = z * 2.8;
-        const noise1 = simplex3(nx, ny, nz) * 0.12;
-        const noise2 = simplex3(nx * 2.1 + 7, ny * 2.1, nz * 2.1) * 0.06;
-        const noise3 = simplex3(nx * 4.3 + 13, ny * 4.3, nz * 4.3) * 0.025;
-        const disp = noise1 + noise2 + noise3;
-
-        const r = brainScale + disp;
-        x = (x / brainScale) * r;
-        y = (y / brainScale) * r;
-        z = (z / brainScale) * r;
-
-        // offset hemispheres
-        x += (side === 'left' ? -0.12 : 0.12);
-
-        pos.setXYZ(i, x, y, z);
-        basePositions[i * 3] = x;
-        basePositions[i * 3 + 1] = y;
-        basePositions[i * 3 + 2] = z;
-
-        // tribev2-style heatmap coloring
-        const activity = (simplex3(x * 3.5 + 100, y * 3.5, z * 3.5) + 1) * 0.5;
-        const hot = activity > 0.55;
-
-        let cr, cg, cb;
-        if (hot) {
-          // warm: dark red -> bright orange-red
-          const t = (activity - 0.55) / 0.45;
-          cr = 0.35 + t * 0.65;
-          cg = 0.04 + t * 0.15;
-          cb = 0.04 + t * 0.02;
-        } else {
-          // cool: deep blue-gray -> teal
-          const t = activity / 0.55;
-          cr = 0.06 + t * 0.08;
-          cg = 0.08 + t * 0.12;
-          cb = 0.15 + t * 0.15;
-        }
-
-        colors[i * 3]     = cr;
-        colors[i * 3 + 1] = cg;
-        colors[i * 3 + 2] = cb;
+    // ---- tribev2 heatmap colormap ----
+    function activityToColor(t) {
+      // tribev2-inspired: cool blue-gray -> teal -> yellow -> hot red
+      let r, g, b;
+      if (t < 0.25) {
+        const s = t / 0.25;
+        r = 0.08 + s * 0.04;
+        g = 0.10 + s * 0.10;
+        b = 0.22 + s * 0.08;
+      } else if (t < 0.5) {
+        const s = (t - 0.25) / 0.25;
+        r = 0.12 + s * 0.10;
+        g = 0.20 + s * 0.15;
+        b = 0.30 - s * 0.05;
+      } else if (t < 0.75) {
+        const s = (t - 0.5) / 0.25;
+        r = 0.22 + s * 0.50;
+        g = 0.35 + s * 0.20;
+        b = 0.25 - s * 0.15;
+      } else {
+        const s = (t - 0.75) / 0.25;
+        r = 0.72 + s * 0.28;
+        g = 0.55 - s * 0.35;
+        b = 0.10 - s * 0.06;
       }
+      return [r, g, b];
+    }
 
+    // ---- build hemispheres from real mesh data ----
+    function buildHemisphere(data) {
+      const vertices = new Float32Array(data.vertices);
+      const indices = new Uint32Array(data.faces);
+      const activity = data.activity;
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+      geo.setIndex(new THREE.BufferAttribute(indices, 1));
+
+      // vertex colors from activity map
+      const colors = new Float32Array(activity.length * 3);
+      for (let i = 0; i < activity.length; i++) {
+        const [r, g, b] = activityToColor(activity[i]);
+        colors[i * 3] = r;
+        colors[i * 3 + 1] = g;
+        colors[i * 3 + 2] = b;
+      }
       geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
       geo.computeVertexNormals();
-      geo.userData = { basePositions };
 
       const mat = new THREE.MeshStandardMaterial({
         vertexColors: true,
-        roughness: 0.55,
-        metalness: 0.25,
-        flatShading: false
+        roughness: 0.5,
+        metalness: 0.2,
+        flatShading: false,
+        side: THREE.DoubleSide
       });
 
       return new THREE.Mesh(geo, mat);
     }
 
     const brainGroup = new THREE.Group();
-    const leftHemi = createBrainHemisphere('left');
-    const rightHemi = createBrainHemisphere('right');
+    const leftHemi = buildHemisphere(meshData.left);
+    const rightHemi = buildHemisphere(meshData.right);
     brainGroup.add(leftHemi, rightHemi);
 
-    // wireframe overlay (subtle)
+    // subtle wireframe overlay
     [leftHemi, rightHemi].forEach(hemi => {
       const wire = new THREE.LineSegments(
         new THREE.WireframeGeometry(hemi.geometry),
-        new THREE.LineBasicMaterial({ color: 0xff3333, opacity: 0.04, transparent: true })
+        new THREE.LineBasicMaterial({ color: 0xff3333, opacity: 0.025, transparent: true })
       );
       hemi.add(wire);
     });
 
-    // center the brain slightly left
-    brainGroup.position.set(-1.8, 0, 0);
-    brainGroup.rotation.x = -0.15;
-    brainGroup.rotation.z = 0.08;
+    // position brain left of center
+    brainGroup.position.set(-40, 0, 0);
+    brainGroup.rotation.set(-0.1, -1.2, 0.05);
     scene.add(brainGroup);
 
-    // ---- floating particles ----
-    const particleCount = 200;
+    // ---- floating particles around brain ----
+    const particleCount = 180;
     const pGeo = new THREE.BufferGeometry();
-    const pPositions = new Float32Array(particleCount * 3);
-    const pVelocities = [];
+    const pPos = new Float32Array(particleCount * 3);
+    const pVel = [];
     for (let i = 0; i < particleCount; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const r = 1.3 + Math.random() * 1.5;
-      pPositions[i*3]   = r * Math.sin(phi) * Math.cos(theta) - 1.8;
-      pPositions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-      pPositions[i*3+2] = r * Math.cos(phi);
-      pVelocities.push({
-        x: (Math.random()-0.5)*0.003,
-        y: (Math.random()-0.5)*0.003,
-        z: (Math.random()-0.5)*0.003
+      const r = 50 + Math.random() * 60;
+      pPos[i*3]   = r * Math.sin(phi) * Math.cos(theta) - 40;
+      pPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+      pPos[i*3+2] = r * Math.cos(phi);
+      pVel.push({
+        x: (Math.random()-0.5) * 0.08,
+        y: (Math.random()-0.5) * 0.08,
+        z: (Math.random()-0.5) * 0.08
       });
     }
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
 
-    const pMat = new THREE.PointsMaterial({
+    const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
       color: 0xff3333,
-      size: 0.02,
+      size: 0.6,
       transparent: true,
-      opacity: 0.4,
+      opacity: 0.35,
       sizeAttenuation: true
-    });
-    const particles = new THREE.Points(pGeo, pMat);
+    }));
     scene.add(particles);
 
-    // ---- brain interaction ----
+    // ---- hide loader ----
+    loaderFill.style.width = '100%';
+    setTimeout(() => loaderEl.classList.add('hidden'), 300);
+
+    // ---- brain drag interaction ----
     let brainDragging = false;
-    let brainRotY = 0, brainRotX = 0;
-    let brainTargetRotY = 0, brainTargetRotX = 0;
+    let brainRotY = -1.2, brainRotX = -0.1;
+    let brainTgtY = -1.2, brainTgtX = -0.1;
     let bLastX = 0, bLastY = 0;
-    let brainVelX = 0, brainVelY = 0;
-    let bLastTime = 0;
+    let bVelX = 0, bVelY = 0, bLastT = 0;
 
     const brainZone = document.getElementById('brain-zone');
-    brainZone.addEventListener('mousedown', e => {
+
+    function brainDown(x, y) {
       brainDragging = true;
       brainZone.style.cursor = 'grabbing';
-      bLastX = e.clientX; bLastY = e.clientY;
-      bLastTime = Date.now();
-      brainVelX = 0; brainVelY = 0;
-    });
-    window.addEventListener('mousemove', e => {
+      bLastX = x; bLastY = y;
+      bLastT = Date.now();
+      bVelX = 0; bVelY = 0;
+    }
+    function brainMove(x, y) {
       if (!brainDragging) return;
-      const dx = e.clientX - bLastX;
-      const dy = e.clientY - bLastY;
+      const dx = x - bLastX, dy = y - bLastY;
       const now = Date.now();
-      const dt = Math.max(now - bLastTime, 1);
-      brainVelX = dx / dt;
-      brainVelY = dy / dt;
-      bLastX = e.clientX; bLastY = e.clientY;
-      bLastTime = now;
-      brainTargetRotY += dx * 0.008;
-      brainTargetRotX += dy * 0.006;
-    });
-    window.addEventListener('mouseup', () => {
-      if (brainDragging) {
-        brainDragging = false;
-        brainZone.style.cursor = 'grab';
-        brainTargetRotY += brainVelX * 0.5;
-        brainTargetRotX += brainVelY * 0.5;
-      }
-    });
-
-    // touch
-    brainZone.addEventListener('touchstart', e => {
-      brainDragging = true;
-      const t = e.touches[0];
-      bLastX = t.clientX; bLastY = t.clientY;
-      bLastTime = Date.now();
-    }, { passive: true });
-    window.addEventListener('touchmove', e => {
+      const dt = Math.max(now - bLastT, 1);
+      bVelX = dx / dt; bVelY = dy / dt;
+      bLastX = x; bLastY = y; bLastT = now;
+      brainTgtY += dx * 0.005;
+      brainTgtX += dy * 0.004;
+    }
+    function brainUp() {
       if (!brainDragging) return;
-      const t = e.touches[0];
-      const dx = t.clientX - bLastX, dy = t.clientY - bLastY;
-      bLastX = t.clientX; bLastY = t.clientY;
-      brainTargetRotY += dx * 0.008;
-      brainTargetRotX += dy * 0.006;
-    }, { passive: true });
-    window.addEventListener('touchend', () => { brainDragging = false; });
+      brainDragging = false;
+      brainZone.style.cursor = 'grab';
+      brainTgtY += bVelX * 0.4;
+      brainTgtX += bVelY * 0.4;
+    }
+
+    brainZone.addEventListener('mousedown', e => brainDown(e.clientX, e.clientY));
+    window.addEventListener('mousemove', e => brainMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', brainUp);
+    brainZone.addEventListener('touchstart', e => { const t = e.touches[0]; brainDown(t.clientX, t.clientY); }, { passive: true });
+    window.addEventListener('touchmove', e => { const t = e.touches[0]; brainMove(t.clientX, t.clientY); }, { passive: true });
+    window.addEventListener('touchend', brainUp);
 
     // ---- card interaction ----
     const card = document.getElementById('card');
@@ -552,20 +489,15 @@
     let cardRotX = 0, cardRotY = 0, cardTgtX = 0, cardTgtY = 0;
 
     card.addEventListener('mousedown', e => {
-      cardDrag = true;
-      card.classList.add('dragging');
+      cardDrag = true; card.classList.add('dragging');
       cStartX = e.clientX; cStartY = e.clientY;
     });
     window.addEventListener('mousemove', e => {
       if (!cardDrag) return;
-      cardTgtY = (e.clientX - cStartX) * 0.3;
-      cardTgtX = -(e.clientY - cStartY) * 0.3;
-      cardTgtX = Math.max(-35, Math.min(35, cardTgtX));
-      cardTgtY = Math.max(-35, Math.min(35, cardTgtY));
+      cardTgtY = Math.max(-35, Math.min(35, (e.clientX - cStartX) * 0.3));
+      cardTgtX = Math.max(-35, Math.min(35, -(e.clientY - cStartY) * 0.3));
     });
-    window.addEventListener('mouseup', () => {
-      if (cardDrag) { cardDrag = false; card.classList.remove('dragging'); }
-    });
+    window.addEventListener('mouseup', () => { if (cardDrag) { cardDrag = false; card.classList.remove('dragging'); } });
 
     // ---- animate ----
     let time = 0;
@@ -573,26 +505,22 @@
       requestAnimationFrame(animate);
       time += 0.01;
 
-      // brain idle rotation
+      // brain auto-rotate + drag
       if (!brainDragging) {
-        brainTargetRotY += 0.002;
-        brainTargetRotX += Math.sin(time * 0.5) * 0.0003;
+        brainTgtY += 0.0015;
+        brainTgtX += Math.sin(time * 0.5) * 0.0002;
       }
-      brainRotY += (brainTargetRotY - brainRotY) * 0.06;
-      brainRotX += (brainTargetRotX - brainRotX) * 0.06;
+      brainRotY += (brainTgtY - brainRotY) * 0.06;
+      brainRotX += (brainTgtX - brainRotX) * 0.06;
       brainGroup.rotation.y = brainRotY;
-      brainGroup.rotation.x = -0.15 + brainRotX;
-
-      // subtle brain float
-      brainGroup.position.y = Math.sin(time * 0.7) * 0.06;
+      brainGroup.rotation.x = brainRotX;
+      brainGroup.position.y = Math.sin(time * 0.6) * 1.5;
 
       // card spring
       if (!cardDrag) { cardTgtX *= 0.93; cardTgtY *= 0.93; }
       cardRotX += (cardTgtX - cardRotX) * 0.1;
       cardRotY += (cardTgtY - cardRotY) * 0.1;
       card.style.transform = `rotateX(${cardRotX}deg) rotateY(${cardRotY}deg)`;
-
-      // card shine
       const sx = 50 + cardRotY * 1.2, sy = 50 - cardRotX * 1.2;
       cardFace.style.backgroundImage =
         `radial-gradient(circle at ${sx}% ${sy}%, rgba(255,255,255,0.025) 0%, transparent 55%),
@@ -601,30 +529,23 @@
       // particles drift
       const pp = particles.geometry.attributes.position;
       for (let i = 0; i < particleCount; i++) {
-        pp.array[i*3]   += pVelocities[i].x;
-        pp.array[i*3+1] += pVelocities[i].y;
-        pp.array[i*3+2] += pVelocities[i].z;
-        // soft boundary
-        const dx = pp.array[i*3] + 1.8;
-        const dy = pp.array[i*3+1];
-        const dz = pp.array[i*3+2];
-        const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-        if (dist > 3) {
-          pVelocities[i].x *= -1;
-          pVelocities[i].y *= -1;
-          pVelocities[i].z *= -1;
+        pp.array[i*3]   += pVel[i].x;
+        pp.array[i*3+1] += pVel[i].y;
+        pp.array[i*3+2] += pVel[i].z;
+        const dx = pp.array[i*3] + 40, dy = pp.array[i*3+1], dz = pp.array[i*3+2];
+        if (Math.sqrt(dx*dx+dy*dy+dz*dz) > 100) {
+          pVel[i].x *= -1; pVel[i].y *= -1; pVel[i].z *= -1;
         }
       }
       pp.needsUpdate = true;
 
       // pulse rim light
-      rimLight.intensity = 2.2 + Math.sin(time * 1.5) * 0.6;
+      rimLight.intensity = 2.5 + Math.sin(time * 1.5) * 0.8;
 
       renderer.render(scene, camera);
     }
     animate();
 
-    // resize
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
