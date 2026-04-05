@@ -311,8 +311,8 @@
     brainGroup.add(buildHemisphere(meshData.right));
     brainGroup.scale.set(0.3, 0.3, 0.3);
     brainGroup.position.set(-18, 0, 0);
-    // RAS -> Three.js Y-up: PI/2 on X aligns superior with Y-up, PI on Y gives left lateral view
-    brainGroup.rotation.set(Math.PI / 2, Math.PI, 0);
+    // RAS -> Three.js Y-up: -PI/2 on X maps Z(superior)->Y(up), -PI/2 on Y gives left lateral view
+    brainGroup.rotation.set(-Math.PI / 2, -Math.PI / 2, 0);
     scene.add(brainGroup);
 
     // ---- particles ----
@@ -396,8 +396,8 @@
     setTimeout(() => loaderEl.classList.add('hidden'), 300);
 
     // ---- brain drag ----
-    let brainDrag = false, brainRotY = Math.PI, brainRotX = Math.PI / 2;
-    let brainTgtY = Math.PI, brainTgtX = Math.PI / 2;
+    let brainDrag = false, brainRotY = -Math.PI / 2, brainRotX = -Math.PI / 2;
+    let brainTgtY = -Math.PI / 2, brainTgtX = -Math.PI / 2;
     let bLX = 0, bLY = 0, bVX = 0, bVY = 0, bLT = 0;
 
     function bDown(x,y){brainDrag=true;canvas.classList.add('dragging');bLX=x;bLY=y;bLT=Date.now();bVX=0;bVY=0}
