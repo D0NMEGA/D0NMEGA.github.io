@@ -6,235 +6,77 @@
   <title>D0NMEGA // Neural Interface</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;600;700&display=swap');
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#06060a;--accent:#ff3333;--accent-dim:rgba(255,51,51,0.06);--mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif;--heading:'Archivo',sans-serif}
+    body{min-height:100vh;background:var(--bg);font-family:var(--sans);color:#e0e0e0;overflow:hidden;user-select:none;-webkit-user-select:none}
 
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    #brain-canvas{position:fixed;inset:0;z-index:0;cursor:grab}
+    #brain-canvas.dragging{cursor:grabbing}
 
-    :root {
-      --bg: #06060a;
-      --surface: #0e0e14;
-      --border: rgba(255, 51, 51, 0.12);
-      --accent: #ff3333;
-      --accent-dim: rgba(255, 51, 51, 0.06);
-      --text: #e0e0e0;
-      --mono: 'JetBrains Mono', monospace;
-      --sans: 'Space Grotesk', sans-serif;
-      --heading: 'Archivo', sans-serif;
-    }
+    .glow{position:fixed;border-radius:50%;filter:blur(160px);pointer-events:none;z-index:0}
+    .glow--a{width:500px;height:500px;background:var(--accent);opacity:0.05;top:-10%;right:20%}
+    .glow--b{width:400px;height:400px;background:#2244ff;opacity:0.03;bottom:-5%;left:10%}
 
-    body {
-      min-height: 100vh;
-      background: var(--bg);
-      font-family: var(--sans);
-      color: var(--text);
-      overflow: hidden;
-      user-select: none;
-      -webkit-user-select: none;
-    }
+    /* loader */
+    #loader{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:100;transition:opacity 0.6s}
+    #loader.hidden{opacity:0;pointer-events:none}
+    .loader-text{font:600 11px/1 var(--mono);color:var(--accent);letter-spacing:0.2em;text-transform:uppercase}
+    .loader-bar{width:180px;height:2px;background:#111;margin-top:16px;border-radius:2px;overflow:hidden}
+    .loader-bar__fill{width:0%;height:100%;background:var(--accent);transition:width 0.3s}
 
-    /* layout */
-    .viewport {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: clamp(20px, 5vw, 80px);
-      padding: 24px;
-    }
+    /* card -- positioned right side */
+    .card-wrap{position:fixed;right:5vw;top:50%;transform:translateY(-50%);z-index:5;perspective:1200px}
+    .card{width:340px;transform-style:preserve-3d;will-change:transform;cursor:grab}
+    .card.dragging{cursor:grabbing}
+    .card__face{padding:32px 28px;border-radius:16px;position:relative;overflow:hidden;backface-visibility:hidden;background:linear-gradient(145deg,rgba(14,14,20,0.96),rgba(8,8,12,0.98));border:1px solid rgba(255,51,51,0.12);box-shadow:0 0 0 1px rgba(255,255,255,0.02),0 30px 80px rgba(0,0,0,0.5),0 0 50px var(--accent-dim)}
+    .card__face::after{content:'';position:absolute;inset:-2px;border-radius:18px;background:conic-gradient(from var(--glow-angle,0deg),transparent 0%,rgba(255,51,51,0.3)8%,transparent 16%,transparent 84%,rgba(255,51,51,0.15)92%,transparent 100%);z-index:-1;animation:edgeSpin 8s linear infinite;filter:blur(3px)}
+    @property --glow-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+    @keyframes edgeSpin{to{--glow-angle:360deg}}
 
-    #brain-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
+    .status{display:flex;align-items:center;gap:8px;font:600 10px/1 var(--mono);color:var(--accent);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:20px}
+    .status__dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:blink 2.4s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+    .card__name{font:700 24px/1.1 var(--heading);color:#fff;letter-spacing:-0.03em;margin-bottom:2px}
+    .card__handle{font:400 12px/1 var(--mono);color:var(--accent);margin-bottom:14px}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,51,51,0.25),transparent);margin:12px 0}
+    .card__bio{font:400 12px/1.6 var(--sans);color:#888;margin-bottom:14px}
+    .card__bio strong{color:#bbb}
+    .meta{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+    .meta__row{display:flex;gap:10px;font:400 10px/1.4 var(--mono)}
+    .meta__key{color:#444;min-width:60px}
+    .meta__val{color:#999}
+    .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+    .tag{font:400 8px/1 var(--mono);letter-spacing:0.06em;padding:4px 10px;border-radius:100px;border:1px solid rgba(255,51,51,0.18);color:var(--accent);background:var(--accent-dim)}
+    .cta{display:inline-flex;align-items:center;gap:8px;font:500 10px/1 var(--mono);color:var(--accent);text-decoration:none;padding:8px 16px;border:1px solid rgba(255,51,51,0.25);border-radius:8px;background:var(--accent-dim);transition:all 0.3s}
+    .cta:hover{background:rgba(255,51,51,0.12);box-shadow:0 0 18px rgba(255,51,51,0.15)}
 
-    /* ambient */
-    .glow {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(160px);
-      pointer-events: none;
-      z-index: 0;
-    }
-    .glow--a { width: 500px; height: 500px; background: var(--accent); opacity: 0.06; top: -10%; left: 55%; }
-    .glow--b { width: 400px; height: 400px; background: #2244ff; opacity: 0.04; bottom: -5%; left: 10%; }
+    /* emotion panel */
+    .emo-panel{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:14px}
+    .emo-buttons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+    .emo-btn{font:500 10px/1 var(--mono);letter-spacing:0.08em;text-transform:uppercase;padding:8px 16px;border-radius:100px;border:1px solid rgba(255,51,51,0.2);color:#888;background:rgba(255,51,51,0.04);cursor:pointer;transition:all 0.3s;outline:none}
+    .emo-btn:hover{color:var(--accent);border-color:rgba(255,51,51,0.4);background:rgba(255,51,51,0.08)}
+    .emo-btn.active{color:#fff;border-color:var(--accent);background:rgba(255,51,51,0.15);box-shadow:0 0 20px rgba(255,51,51,0.15)}
 
-    /* loading */
-    #loader {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg);
-      z-index: 100;
-      transition: opacity 0.6s;
-    }
-    #loader.hidden { opacity: 0; pointer-events: none; }
-    .loader-text {
-      font: 600 11px/1 var(--mono);
-      color: var(--accent);
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-    }
-    .loader-bar {
-      width: 180px; height: 2px;
-      background: #111;
-      margin-top: 16px;
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .loader-bar__fill {
-      width: 0%;
-      height: 100%;
-      background: var(--accent);
-      transition: width 0.3s;
-    }
+    /* stimulus text overlay */
+    .stimulus{position:fixed;left:5vw;bottom:140px;max-width:420px;z-index:8;opacity:0;transform:translateY(10px);transition:opacity 0.5s,transform 0.5s;pointer-events:none}
+    .stimulus.visible{opacity:1;transform:translateY(0)}
+    .stimulus__label{font:600 9px/1 var(--mono);color:var(--accent);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px}
+    .stimulus__text{font:400 15px/1.7 var(--sans);color:#bbb}
+    .stimulus__region{font:400 10px/1.4 var(--mono);color:#444;margin-top:10px}
 
-    /* card */
-    .scene {
-      perspective: 1200px;
-      z-index: 2;
-      flex-shrink: 0;
-    }
+    .brain-label{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);font:400 9px/1 var(--mono);color:#1a1a1a;letter-spacing:0.15em;text-transform:uppercase;z-index:10}
 
-    .card {
-      width: 380px;
-      transform-style: preserve-3d;
-      will-change: transform;
-      cursor: grab;
-    }
-    .card.dragging { cursor: grabbing; }
+    .attr{position:fixed;top:14px;right:18px;font:400 9px/1 var(--mono);color:#1a1a1a;letter-spacing:0.1em;z-index:10}
+    .attr a{color:#222;text-decoration:none}
+    .attr a:hover{color:var(--accent)}
 
-    .card__face {
-      padding: 36px 32px;
-      border-radius: 18px;
-      position: relative;
-      overflow: hidden;
-      backface-visibility: hidden;
-      background: linear-gradient(145deg, rgba(14,14,20,0.96), rgba(8,8,12,0.98));
-      border: 1px solid var(--border);
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.02),
-        0 30px 80px rgba(0,0,0,0.5),
-        0 0 50px var(--accent-dim);
-    }
-
-    .card__face::after {
-      content: '';
-      position: absolute;
-      inset: -2px;
-      border-radius: 20px;
-      background: conic-gradient(
-        from var(--glow-angle, 0deg),
-        transparent 0%, rgba(255,51,51,0.35) 8%, transparent 16%,
-        transparent 84%, rgba(255,51,51,0.18) 92%, transparent 100%
-      );
-      z-index: -1;
-      animation: edgeSpin 8s linear infinite;
-      filter: blur(3px);
-    }
-    @property --glow-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-    @keyframes edgeSpin { to { --glow-angle: 360deg; } }
-
-    .status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font: 600 10px/1 var(--mono);
-      color: var(--accent);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 24px;
-    }
-    .status__dot {
-      width: 5px; height: 5px; border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 6px var(--accent);
-      animation: blink 2.4s ease-in-out infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    .card__name { font: 700 28px/1.1 var(--heading); color: #fff; letter-spacing: -0.03em; margin-bottom: 2px; }
-    .card__handle { font: 400 13px/1 var(--mono); color: var(--accent); margin-bottom: 18px; }
-    .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,51,51,0.25), transparent); margin: 14px 0; }
-    .card__bio { font: 400 13px/1.65 var(--sans); color: #888; margin-bottom: 18px; }
-    .card__bio strong { color: #bbb; }
-
-    .meta { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-    .meta__row { display: flex; gap: 10px; font: 400 11px/1.4 var(--mono); }
-    .meta__key { color: #444; min-width: 64px; }
-    .meta__val { color: #999; }
-
-    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
-    .tag {
-      font: 400 9px/1 var(--mono);
-      letter-spacing: 0.06em;
-      padding: 5px 11px;
-      border-radius: 100px;
-      border: 1px solid rgba(255,51,51,0.18);
-      color: var(--accent);
-      background: var(--accent-dim);
-      transition: background 0.3s, box-shadow 0.3s;
-    }
-    .tag:hover { background: rgba(255,51,51,0.12); box-shadow: 0 0 10px rgba(255,51,51,0.12); }
-
-    .cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font: 500 11px/1 var(--mono);
-      color: var(--accent);
-      text-decoration: none;
-      padding: 9px 18px;
-      border: 1px solid rgba(255,51,51,0.25);
-      border-radius: 8px;
-      background: var(--accent-dim);
-      transition: all 0.3s;
-    }
-    .cta:hover { background: rgba(255,51,51,0.12); box-shadow: 0 0 18px rgba(255,51,51,0.15); }
-    .cta:hover .cta__arrow { transform: translateX(3px); }
-    .cta__arrow { transition: transform 0.3s; }
-
-    .brain-label {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font: 400 10px/1 var(--mono);
-      color: #292929;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      z-index: 10;
-      animation: labelPulse 5s ease-in-out infinite;
-    }
-    @keyframes labelPulse { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
-
-    .attr {
-      position: fixed;
-      top: 16px;
-      right: 20px;
-      font: 400 9px/1 var(--mono);
-      color: #222;
-      letter-spacing: 0.1em;
-      z-index: 10;
-    }
-    .attr a { color: #333; text-decoration: none; }
-    .attr a:hover { color: var(--accent); }
-
-    @media (prefers-reduced-motion: reduce) {
-      .card__face::after, .status__dot, .brain-label { animation: none; }
-    }
-
-    @media (max-width: 900px) {
-      .viewport { flex-direction: column-reverse; gap: 20px; overflow-y: auto; }
-      .card { width: min(380px, 90vw); }
+    @media(prefers-reduced-motion:reduce){.card__face::after,.status__dot{animation:none}}
+    @media(max-width:900px){
+      .card-wrap{position:relative;right:auto;top:auto;transform:none;margin:20px auto}
+      .emo-panel{position:relative;bottom:auto}
     }
   </style>
-  <script type="importmap">
-    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js" } }
-  </script>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js"}}</script>
 </head>
 <body>
 
@@ -245,55 +87,135 @@
 
   <div class="glow glow--a"></div>
   <div class="glow glow--b"></div>
-
   <canvas id="brain-canvas"></canvas>
 
-  <div class="viewport">
-    <div style="flex:1;min-width:200px;pointer-events:all;cursor:grab;" id="brain-zone"></div>
-    <div class="scene">
-      <div class="card" id="card">
-        <div class="card__face" id="card-face">
-          <div class="status">
-            <div class="status__dot"></div>
-            <span>ONLINE // BUILDING</span>
-          </div>
-          <div class="card__name">Donovan Santine</div>
-          <div class="card__handle">@D0NMEGA</div>
-          <div class="divider"></div>
-          <p class="card__bio">
-            Building <strong>MoltGrid</strong> -- open-source backend for autonomous
-            AI agents. Memory, messaging, task queues, and marketplace in one API.
-          </p>
-          <div class="meta">
-            <div class="meta__row"><span class="meta__key">school</span><span class="meta__val">UT Austin // BME Honors</span></div>
-            <div class="meta__row"><span class="meta__key">research</span><span class="meta__val">REACH Equity Lab // Exposomics</span></div>
-            <div class="meta__row"><span class="meta__key">stack</span><span class="meta__val">Python, FastAPI, PostgreSQL, Redis</span></div>
-          </div>
-          <div class="tags">
-            <span class="tag">AI Agents</span>
-            <span class="tag">FastAPI</span>
-            <span class="tag">Open Source</span>
-            <span class="tag">BCI</span>
-            <span class="tag">MCP</span>
-          </div>
-          <a href="https://moltgrid.com" class="cta" target="_blank" rel="noopener">
-            moltgrid.com <span class="cta__arrow">&rarr;</span>
-          </a>
+  <div class="card-wrap">
+    <div class="card" id="card">
+      <div class="card__face" id="card-face">
+        <div class="status"><div class="status__dot"></div><span>ONLINE // BUILDING</span></div>
+        <div class="card__name">Donovan Santine</div>
+        <div class="card__handle">@D0NMEGA</div>
+        <div class="divider"></div>
+        <p class="card__bio">Building <strong>MoltGrid</strong> -- open-source backend for autonomous AI agents. Memory, messaging, task queues, and marketplace in one API.</p>
+        <div class="meta">
+          <div class="meta__row"><span class="meta__key">school</span><span class="meta__val">UT Austin // BME Honors</span></div>
+          <div class="meta__row"><span class="meta__key">research</span><span class="meta__val">REACH Equity Lab // Exposomics</span></div>
+          <div class="meta__row"><span class="meta__key">stack</span><span class="meta__val">Python, FastAPI, PostgreSQL, Redis</span></div>
         </div>
+        <div class="tags">
+          <span class="tag">AI Agents</span><span class="tag">FastAPI</span><span class="tag">Open Source</span><span class="tag">BCI</span><span class="tag">MCP</span>
+        </div>
+        <a href="https://moltgrid.com" class="cta" target="_blank" rel="noopener">moltgrid.com <span>&rarr;</span></a>
       </div>
     </div>
   </div>
 
-  <div class="brain-label">drag brain to rotate &middot; fsaverage5 mesh via facebookresearch/tribev2</div>
+  <div class="stimulus" id="stimulus">
+    <div class="stimulus__label" id="stim-label"></div>
+    <div class="stimulus__text" id="stim-text"></div>
+    <div class="stimulus__region" id="stim-region"></div>
+  </div>
+
+  <div class="emo-panel">
+    <div class="emo-buttons" id="emo-buttons">
+      <button class="emo-btn" data-emo="happiness">Maximize Happiness</button>
+      <button class="emo-btn" data-emo="chills">Give Chills</button>
+      <button class="emo-btn" data-emo="sadness">Make Very Sad</button>
+      <button class="emo-btn" data-emo="fear">Induce Fear</button>
+      <button class="emo-btn" data-emo="awe">Inspire Awe</button>
+      <button class="emo-btn" data-emo="reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="brain-label">drag to rotate &middot; fsaverage5 via facebookresearch/tribev2</div>
   <div class="attr"><a href="https://github.com/D0NMEGA" target="_blank">D0NMEGA</a></div>
 
   <script type="module">
     import * as THREE from 'three';
 
-    // ---- load real brain mesh ----
+    // ---- emotion definitions ----
+    const EMOTIONS = {
+      happiness: {
+        label: 'MAXIMIZING HAPPINESS',
+        text: 'You just got the call. Full ride. Everything you worked for, every late night, every doubt you pushed through -- it all led here. Your mom is crying on the other end. You can hear your little brother shouting in the background. You made it.',
+        regions: 'Left DLPFC, orbitofrontal cortex, ventral striatum, temporal pole',
+        // activation centers: [x, y, z, radius, intensity]
+        centers: [
+          [-42, 28, 28, 30, 1.0],   // left DLPFC
+          [-30, 48, -8, 25, 0.9],    // left OFC
+          [30, 48, -8, 25, 0.8],     // right OFC
+          [48, 12, -28, 22, 0.7],    // right temporal pole
+          [-48, 12, -28, 22, 0.7],   // left temporal pole
+          [0, 8, -5, 18, 0.85],      // ventral striatum (deep, but surface echo)
+        ],
+        baseColor: [0.08, 0.12, 0.22],
+        hotColor: [1.0, 0.75, 0.1]
+      },
+      chills: {
+        label: 'INDUCING FRISSON',
+        text: 'The orchestra swells. A single violin holds a note so pure it feels like it is reaching inside you and pulling something out. Your arms prickle. The hair on the back of your neck rises. For one perfect second, you are nothing but the music.',
+        regions: 'Auditory cortex, anterior insula, orbitofrontal cortex, supplementary motor area',
+        centers: [
+          [-58, -18, 8, 28, 1.0],    // left auditory cortex
+          [58, -18, 8, 28, 1.0],     // right auditory cortex
+          [-35, 15, -8, 22, 0.9],    // left anterior insula
+          [35, 15, -8, 22, 0.9],     // right anterior insula
+          [0, 52, -10, 20, 0.75],    // medial OFC
+          [0, -5, 62, 22, 0.6],      // SMA
+        ],
+        baseColor: [0.06, 0.10, 0.25],
+        hotColor: [0.3, 0.6, 1.0]
+      },
+      sadness: {
+        label: 'DEEP SADNESS',
+        text: 'The chair at the table is still there. No one moved it. Her coffee mug is in the sink, lipstick on the rim. The house smells the same. Everything is exactly where she left it. Everything except her.',
+        regions: 'Amygdala, subgenual ACC, anterior insula, posterior cingulate',
+        centers: [
+          [-22, -4, -18, 22, 1.0],   // left amygdala
+          [22, -4, -18, 22, 1.0],    // right amygdala
+          [0, 28, -8, 20, 0.9],      // subgenual ACC
+          [-36, 8, 2, 22, 0.85],     // left insula
+          [36, 8, 2, 22, 0.85],      // right insula
+          [0, -52, 28, 25, 0.7],     // posterior cingulate
+        ],
+        baseColor: [0.08, 0.06, 0.15],
+        hotColor: [0.4, 0.15, 0.7]
+      },
+      fear: {
+        label: 'INDUCING FEAR',
+        text: 'The basement light flickers once and dies. In the silence you hear it -- breathing that is not yours. Slow. Wet. Close. Something shifts in the dark, and you realize the door behind you just clicked shut.',
+        regions: 'Amygdala (bilateral), anterior insula, dorsal ACC, periaqueductal gray',
+        centers: [
+          [-20, -6, -18, 25, 1.0],   // left amygdala
+          [20, -6, -18, 25, 1.0],    // right amygdala
+          [-34, 12, 0, 24, 0.95],    // left anterior insula
+          [34, 12, 0, 24, 0.95],     // right anterior insula
+          [0, 18, 38, 22, 0.85],     // dorsal ACC
+          [0, -80, 5, 20, 0.6],      // visual cortex (threat detection)
+        ],
+        baseColor: [0.12, 0.04, 0.04],
+        hotColor: [1.0, 0.15, 0.08]
+      },
+      awe: {
+        label: 'INSPIRING AWE',
+        text: 'You step out of the shuttle airlock. Below you, the entire Earth rotates in silence. Every war, every love story, every song ever written is on that pale blue curve. And you are floating above it all, weightless, watching continents drift under clouds.',
+        regions: 'Temporoparietal junction, dmPFC, precuneus, visual cortex',
+        centers: [
+          [-52, -55, 28, 28, 1.0],   // left TPJ
+          [52, -55, 28, 28, 1.0],    // right TPJ
+          [0, 52, 35, 24, 0.85],     // dorsomedial PFC
+          [0, -65, 35, 26, 0.8],     // precuneus
+          [0, -85, 8, 22, 0.7],      // visual cortex
+          [0, 40, -12, 20, 0.65],    // vmPFC (self-transcendence)
+        ],
+        baseColor: [0.05, 0.10, 0.18],
+        hotColor: [0.2, 0.9, 0.8]
+      }
+    };
+
+    // ---- load mesh ----
     const loaderFill = document.getElementById('loader-fill');
     const loaderEl = document.getElementById('loader');
-
     loaderFill.style.width = '20%';
 
     const resp = await fetch('./brain-mesh.json');
@@ -307,197 +229,186 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.3;
+    renderer.toneMappingExposure = 1.2;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(-110, 15, 90);
-    camera.lookAt(-30, 0, 0);
+    const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 1, 800);
+    camera.position.set(-100, 30, 340);
+    camera.lookAt(-15, 0, 0);
 
     // ---- lights ----
     scene.add(new THREE.AmbientLight(0x444466, 0.5));
-
-    const keyLight = new THREE.DirectionalLight(0xffeedd, 1.0);
-    keyLight.position.set(80, 100, 120);
+    const keyLight = new THREE.DirectionalLight(0xffeedd, 0.9);
+    keyLight.position.set(80, 100, 150);
     scene.add(keyLight);
-
-    const rimLight = new THREE.PointLight(0xff3333, 3.0, 300);
-    rimLight.position.set(-120, 50, -80);
+    const rimLight = new THREE.PointLight(0xff3333, 2.5, 400);
+    rimLight.position.set(-150, 60, -100);
     scene.add(rimLight);
-
-    const fillLight = new THREE.PointLight(0x3344ff, 0.6, 250);
-    fillLight.position.set(80, -60, 60);
+    const fillLight = new THREE.PointLight(0x3344ff, 0.5, 350);
+    fillLight.position.set(100, -60, 80);
     scene.add(fillLight);
 
-    // ---- tribev2 heatmap colormap ----
-    function activityToColor(t) {
-      // tribev2-inspired: cool blue-gray -> teal -> yellow -> hot red
+    // ---- heatmap colormap ----
+    function lerpColor(a, b, t) {
+      return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+    }
+
+    function defaultColor(activity) {
       let r, g, b;
-      if (t < 0.25) {
-        const s = t / 0.25;
-        r = 0.08 + s * 0.04;
-        g = 0.10 + s * 0.10;
-        b = 0.22 + s * 0.08;
-      } else if (t < 0.5) {
-        const s = (t - 0.25) / 0.25;
-        r = 0.12 + s * 0.10;
-        g = 0.20 + s * 0.15;
-        b = 0.30 - s * 0.05;
-      } else if (t < 0.75) {
-        const s = (t - 0.5) / 0.25;
-        r = 0.22 + s * 0.50;
-        g = 0.35 + s * 0.20;
-        b = 0.25 - s * 0.15;
-      } else {
-        const s = (t - 0.75) / 0.25;
-        r = 0.72 + s * 0.28;
-        g = 0.55 - s * 0.35;
-        b = 0.10 - s * 0.06;
-      }
+      if (activity < 0.25) { const s=activity/0.25; r=0.08+s*0.04; g=0.10+s*0.10; b=0.22+s*0.08; }
+      else if (activity < 0.5) { const s=(activity-0.25)/0.25; r=0.12+s*0.10; g=0.20+s*0.15; b=0.30-s*0.05; }
+      else if (activity < 0.75) { const s=(activity-0.5)/0.25; r=0.22+s*0.50; g=0.35+s*0.20; b=0.25-s*0.15; }
+      else { const s=(activity-0.75)/0.25; r=0.72+s*0.28; g=0.55-s*0.35; b=0.10-s*0.06; }
       return [r, g, b];
     }
 
-    // ---- build hemispheres from real mesh data ----
+    // ---- build hemispheres ----
+    const hemis = [];
+
     function buildHemisphere(data) {
       const vertices = new Float32Array(data.vertices);
       const indices = new Uint32Array(data.faces);
       const activity = data.activity;
+      const vCount = activity.length;
 
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
       geo.setIndex(new THREE.BufferAttribute(indices, 1));
 
-      // vertex colors from activity map
-      const colors = new Float32Array(activity.length * 3);
-      for (let i = 0; i < activity.length; i++) {
-        const [r, g, b] = activityToColor(activity[i]);
-        colors[i * 3] = r;
-        colors[i * 3 + 1] = g;
-        colors[i * 3 + 2] = b;
+      const colors = new Float32Array(vCount * 3);
+      for (let i = 0; i < vCount; i++) {
+        const [r, g, b] = defaultColor(activity[i]);
+        colors[i*3] = r; colors[i*3+1] = g; colors[i*3+2] = b;
       }
       geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
       geo.computeVertexNormals();
 
       const mat = new THREE.MeshStandardMaterial({
-        vertexColors: true,
-        roughness: 0.5,
-        metalness: 0.2,
-        flatShading: false,
-        side: THREE.DoubleSide
+        vertexColors: true, roughness: 0.5, metalness: 0.2, side: THREE.DoubleSide
       });
 
-      return new THREE.Mesh(geo, mat);
+      const mesh = new THREE.Mesh(geo, mat);
+
+      // wireframe
+      const wire = new THREE.LineSegments(
+        new THREE.WireframeGeometry(geo),
+        new THREE.LineBasicMaterial({ color: 0xff3333, opacity: 0.02, transparent: true })
+      );
+      mesh.add(wire);
+
+      hemis.push({ mesh, vertices, activity, colors, vCount });
+      return mesh;
     }
 
     const brainGroup = new THREE.Group();
-    const leftHemi = buildHemisphere(meshData.left);
-    const rightHemi = buildHemisphere(meshData.right);
-    brainGroup.add(leftHemi, rightHemi);
-
-    // subtle wireframe overlay
-    [leftHemi, rightHemi].forEach(hemi => {
-      const wire = new THREE.LineSegments(
-        new THREE.WireframeGeometry(hemi.geometry),
-        new THREE.LineBasicMaterial({ color: 0xff3333, opacity: 0.025, transparent: true })
-      );
-      hemi.add(wire);
-    });
-
-    // position brain left of center
-    brainGroup.position.set(-40, 0, 0);
+    brainGroup.add(buildHemisphere(meshData.left));
+    brainGroup.add(buildHemisphere(meshData.right));
+    brainGroup.position.set(-25, 0, 0);
     brainGroup.rotation.set(-0.1, -1.2, 0.05);
     scene.add(brainGroup);
 
-    // ---- floating particles around brain ----
-    const particleCount = 180;
+    // ---- particles ----
+    const pCount = 120;
     const pGeo = new THREE.BufferGeometry();
-    const pPos = new Float32Array(particleCount * 3);
+    const pPos = new Float32Array(pCount * 3);
     const pVel = [];
-    for (let i = 0; i < particleCount; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = 50 + Math.random() * 60;
-      pPos[i*3]   = r * Math.sin(phi) * Math.cos(theta) - 40;
-      pPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-      pPos[i*3+2] = r * Math.cos(phi);
-      pVel.push({
-        x: (Math.random()-0.5) * 0.08,
-        y: (Math.random()-0.5) * 0.08,
-        z: (Math.random()-0.5) * 0.08
-      });
+    for (let i = 0; i < pCount; i++) {
+      const th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1), r = 60+Math.random()*80;
+      pPos[i*3] = r*Math.sin(ph)*Math.cos(th)-25;
+      pPos[i*3+1] = r*Math.sin(ph)*Math.sin(th);
+      pPos[i*3+2] = r*Math.cos(ph);
+      pVel.push({x:(Math.random()-0.5)*0.06,y:(Math.random()-0.5)*0.06,z:(Math.random()-0.5)*0.06});
     }
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-
     const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
-      color: 0xff3333,
-      size: 0.6,
-      transparent: true,
-      opacity: 0.35,
-      sizeAttenuation: true
+      color: 0xff3333, size: 0.5, transparent: true, opacity: 0.3, sizeAttenuation: true
     }));
     scene.add(particles);
+
+    // ---- emotion activation system ----
+    let currentEmotion = null;
+    let transitionProgress = 0;
+    let targetActivations = null; // Float32Array per hemi
+
+    function computeEmotionActivation(hemi, emotion) {
+      const emo = EMOTIONS[emotion];
+      const acts = new Float32Array(hemi.vCount);
+      const verts = hemi.vertices;
+
+      for (let i = 0; i < hemi.vCount; i++) {
+        const vx = verts[i*3], vy = verts[i*3+1], vz = verts[i*3+2];
+        let maxAct = 0;
+        for (const [cx, cy, cz, radius, intensity] of emo.centers) {
+          const dx = vx-cx, dy = vy-cy, dz = vz-cz;
+          const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+          const a = intensity * Math.exp(-(dist*dist) / (2*radius*radius));
+          if (a > maxAct) maxAct = a;
+        }
+        acts[i] = Math.min(maxAct, 1.0);
+      }
+      return acts;
+    }
+
+    function setEmotion(emotion) {
+      const stimEl = document.getElementById('stimulus');
+      const buttons = document.querySelectorAll('.emo-btn');
+      buttons.forEach(b => b.classList.remove('active'));
+
+      if (emotion === 'reset' || emotion === currentEmotion) {
+        currentEmotion = null;
+        targetActivations = null;
+        transitionProgress = 0;
+        stimEl.classList.remove('visible');
+        return;
+      }
+
+      currentEmotion = emotion;
+      transitionProgress = 0;
+
+      const emo = EMOTIONS[emotion];
+      document.getElementById('stim-label').textContent = emo.label;
+      document.getElementById('stim-text').textContent = emo.text;
+      document.getElementById('stim-region').textContent = 'Regions: ' + emo.regions;
+      stimEl.classList.add('visible');
+
+      const btn = document.querySelector(`[data-emo="${emotion}"]`);
+      if (btn) btn.classList.add('active');
+
+      targetActivations = hemis.map(h => computeEmotionActivation(h, emotion));
+    }
+
+    document.getElementById('emo-buttons').addEventListener('click', e => {
+      const btn = e.target.closest('.emo-btn');
+      if (btn) setEmotion(btn.dataset.emo);
+    });
 
     // ---- hide loader ----
     loaderFill.style.width = '100%';
     setTimeout(() => loaderEl.classList.add('hidden'), 300);
 
-    // ---- brain drag interaction ----
-    let brainDragging = false;
-    let brainRotY = -1.2, brainRotX = -0.1;
+    // ---- brain drag ----
+    let brainDrag = false, brainRotY = -1.2, brainRotX = -0.1;
     let brainTgtY = -1.2, brainTgtX = -0.1;
-    let bLastX = 0, bLastY = 0;
-    let bVelX = 0, bVelY = 0, bLastT = 0;
+    let bLX = 0, bLY = 0, bVX = 0, bVY = 0, bLT = 0;
 
-    const brainZone = document.getElementById('brain-zone');
+    function bDown(x,y){brainDrag=true;canvas.classList.add('dragging');bLX=x;bLY=y;bLT=Date.now();bVX=0;bVY=0}
+    function bMove(x,y){if(!brainDrag)return;const dx=x-bLX,dy=y-bLY,now=Date.now(),dt=Math.max(now-bLT,1);bVX=dx/dt;bVY=dy/dt;bLX=x;bLY=y;bLT=now;brainTgtY+=dx*0.005;brainTgtX+=dy*0.004}
+    function bUp(){if(!brainDrag)return;brainDrag=false;canvas.classList.remove('dragging');brainTgtY+=bVX*0.4;brainTgtX+=bVY*0.4}
 
-    function brainDown(x, y) {
-      brainDragging = true;
-      brainZone.style.cursor = 'grabbing';
-      bLastX = x; bLastY = y;
-      bLastT = Date.now();
-      bVelX = 0; bVelY = 0;
-    }
-    function brainMove(x, y) {
-      if (!brainDragging) return;
-      const dx = x - bLastX, dy = y - bLastY;
-      const now = Date.now();
-      const dt = Math.max(now - bLastT, 1);
-      bVelX = dx / dt; bVelY = dy / dt;
-      bLastX = x; bLastY = y; bLastT = now;
-      brainTgtY += dx * 0.005;
-      brainTgtX += dy * 0.004;
-    }
-    function brainUp() {
-      if (!brainDragging) return;
-      brainDragging = false;
-      brainZone.style.cursor = 'grab';
-      brainTgtY += bVelX * 0.4;
-      brainTgtX += bVelY * 0.4;
-    }
+    canvas.addEventListener('mousedown',e=>bDown(e.clientX,e.clientY));
+    window.addEventListener('mousemove',e=>bMove(e.clientX,e.clientY));
+    window.addEventListener('mouseup',bUp);
+    canvas.addEventListener('touchstart',e=>{const t=e.touches[0];bDown(t.clientX,t.clientY)},{passive:true});
+    window.addEventListener('touchmove',e=>{const t=e.touches[0];bMove(t.clientX,t.clientY)},{passive:true});
+    window.addEventListener('touchend',bUp);
 
-    brainZone.addEventListener('mousedown', e => brainDown(e.clientX, e.clientY));
-    window.addEventListener('mousemove', e => brainMove(e.clientX, e.clientY));
-    window.addEventListener('mouseup', brainUp);
-    brainZone.addEventListener('touchstart', e => { const t = e.touches[0]; brainDown(t.clientX, t.clientY); }, { passive: true });
-    window.addEventListener('touchmove', e => { const t = e.touches[0]; brainMove(t.clientX, t.clientY); }, { passive: true });
-    window.addEventListener('touchend', brainUp);
-
-    // ---- card interaction ----
+    // ---- card drag ----
     const card = document.getElementById('card');
     const cardFace = document.getElementById('card-face');
-    let cardDrag = false, cStartX = 0, cStartY = 0;
-    let cardRotX = 0, cardRotY = 0, cardTgtX = 0, cardTgtY = 0;
-
-    card.addEventListener('mousedown', e => {
-      cardDrag = true; card.classList.add('dragging');
-      cStartX = e.clientX; cStartY = e.clientY;
-    });
-    window.addEventListener('mousemove', e => {
-      if (!cardDrag) return;
-      cardTgtY = Math.max(-35, Math.min(35, (e.clientX - cStartX) * 0.3));
-      cardTgtX = Math.max(-35, Math.min(35, -(e.clientY - cStartY) * 0.3));
-    });
-    window.addEventListener('mouseup', () => { if (cardDrag) { cardDrag = false; card.classList.remove('dragging'); } });
+    let cDrag=false,cSX=0,cSY=0,cRX=0,cRY=0,cTX=0,cTY=0;
+    card.addEventListener('mousedown',e=>{cDrag=true;card.classList.add('dragging');cSX=e.clientX;cSY=e.clientY;e.stopPropagation()});
+    window.addEventListener('mousemove',e=>{if(!cDrag)return;cTY=Math.max(-35,Math.min(35,(e.clientX-cSX)*0.3));cTX=Math.max(-35,Math.min(35,-(e.clientY-cSY)*0.3))});
+    window.addEventListener('mouseup',()=>{if(cDrag){cDrag=false;card.classList.remove('dragging')}});
 
     // ---- animate ----
     let time = 0;
@@ -505,42 +416,85 @@
       requestAnimationFrame(animate);
       time += 0.01;
 
-      // brain auto-rotate + drag
-      if (!brainDragging) {
-        brainTgtY += 0.0015;
-        brainTgtX += Math.sin(time * 0.5) * 0.0002;
-      }
-      brainRotY += (brainTgtY - brainRotY) * 0.06;
-      brainRotX += (brainTgtX - brainRotX) * 0.06;
+      // brain rotation
+      if (!brainDrag) { brainTgtY += 0.0012; brainTgtX += Math.sin(time*0.5)*0.0002; }
+      brainRotY += (brainTgtY-brainRotY)*0.06;
+      brainRotX += (brainTgtX-brainRotX)*0.06;
       brainGroup.rotation.y = brainRotY;
       brainGroup.rotation.x = brainRotX;
-      brainGroup.position.y = Math.sin(time * 0.6) * 1.5;
+      brainGroup.position.y = Math.sin(time*0.6)*1.2;
+
+      // emotion transition
+      if (targetActivations && transitionProgress < 1) {
+        transitionProgress = Math.min(transitionProgress + 0.015, 1);
+        const emo = EMOTIONS[currentEmotion];
+        const t = transitionProgress;
+        // smooth ease
+        const ease = t < 0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+
+        hemis.forEach((h, hi) => {
+          const colAttr = h.mesh.geometry.attributes.color;
+          const tActs = targetActivations[hi];
+          for (let i = 0; i < h.vCount; i++) {
+            // blend: base activity color -> emotion-highlighted color
+            const baseC = defaultColor(h.activity[i]);
+            const emotionAct = tActs[i];
+            const emoC = lerpColor(emo.baseColor, emo.hotColor, emotionAct);
+            // mix between default and emotion state
+            const finalC = lerpColor(baseC, emoC, ease);
+            colAttr.array[i*3]   = finalC[0];
+            colAttr.array[i*3+1] = finalC[1];
+            colAttr.array[i*3+2] = finalC[2];
+          }
+          colAttr.needsUpdate = true;
+        });
+      }
+
+      // reset transition
+      if (!targetActivations && currentEmotion === null) {
+        let needsUpdate = false;
+        hemis.forEach(h => {
+          const colAttr = h.mesh.geometry.attributes.color;
+          for (let i = 0; i < h.vCount; i++) {
+            const [tr,tg,tb] = defaultColor(h.activity[i]);
+            const cr = colAttr.array[i*3], cg = colAttr.array[i*3+1], cb = colAttr.array[i*3+2];
+            if (Math.abs(cr-tr) > 0.005 || Math.abs(cg-tg) > 0.005 || Math.abs(cb-tb) > 0.005) {
+              colAttr.array[i*3]   += (tr-cr)*0.04;
+              colAttr.array[i*3+1] += (tg-cg)*0.04;
+              colAttr.array[i*3+2] += (tb-cb)*0.04;
+              needsUpdate = true;
+            }
+          }
+          if (needsUpdate) colAttr.needsUpdate = true;
+        });
+      }
 
       // card spring
-      if (!cardDrag) { cardTgtX *= 0.93; cardTgtY *= 0.93; }
-      cardRotX += (cardTgtX - cardRotX) * 0.1;
-      cardRotY += (cardTgtY - cardRotY) * 0.1;
-      card.style.transform = `rotateX(${cardRotX}deg) rotateY(${cardRotY}deg)`;
-      const sx = 50 + cardRotY * 1.2, sy = 50 - cardRotX * 1.2;
-      cardFace.style.backgroundImage =
-        `radial-gradient(circle at ${sx}% ${sy}%, rgba(255,255,255,0.025) 0%, transparent 55%),
-         linear-gradient(145deg, rgba(14,14,20,0.96), rgba(8,8,12,0.98))`;
+      if (!cDrag) { cTX *= 0.93; cTY *= 0.93; }
+      cRX += (cTX-cRX)*0.1;
+      cRY += (cTY-cRY)*0.1;
+      card.style.transform = `rotateX(${cRX}deg) rotateY(${cRY}deg)`;
+      const sx = 50+cRY*1.2, sy = 50-cRX*1.2;
+      cardFace.style.backgroundImage = `radial-gradient(circle at ${sx}% ${sy}%,rgba(255,255,255,0.025)0%,transparent 55%),linear-gradient(145deg,rgba(14,14,20,0.96),rgba(8,8,12,0.98))`;
 
-      // particles drift
+      // particles
       const pp = particles.geometry.attributes.position;
-      for (let i = 0; i < particleCount; i++) {
-        pp.array[i*3]   += pVel[i].x;
-        pp.array[i*3+1] += pVel[i].y;
-        pp.array[i*3+2] += pVel[i].z;
-        const dx = pp.array[i*3] + 40, dy = pp.array[i*3+1], dz = pp.array[i*3+2];
-        if (Math.sqrt(dx*dx+dy*dy+dz*dz) > 100) {
-          pVel[i].x *= -1; pVel[i].y *= -1; pVel[i].z *= -1;
-        }
+      for (let i=0;i<pCount;i++){
+        pp.array[i*3]+=pVel[i].x;pp.array[i*3+1]+=pVel[i].y;pp.array[i*3+2]+=pVel[i].z;
+        const dx=pp.array[i*3]+25,dy=pp.array[i*3+1],dz=pp.array[i*3+2];
+        if(Math.sqrt(dx*dx+dy*dy+dz*dz)>120){pVel[i].x*=-1;pVel[i].y*=-1;pVel[i].z*=-1}
       }
       pp.needsUpdate = true;
 
-      // pulse rim light
-      rimLight.intensity = 2.5 + Math.sin(time * 1.5) * 0.8;
+      // pulse lights based on emotion
+      const baseIntensity = currentEmotion ? 3.5 : 2.5;
+      rimLight.intensity = baseIntensity + Math.sin(time*1.5)*0.8;
+      if (currentEmotion && EMOTIONS[currentEmotion]) {
+        const hc = EMOTIONS[currentEmotion].hotColor;
+        rimLight.color.setRGB(hc[0], hc[1]*0.5, hc[2]*0.5);
+      } else {
+        rimLight.color.setHex(0xff3333);
+      }
 
       renderer.render(scene, camera);
     }
