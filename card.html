@@ -431,7 +431,7 @@
       time += 0.01;
 
       // brain rotation
-      if (!brainDrag) { brainTgtY += 0.0003; brainTgtX += Math.sin(time*0.3)*0.00005; }
+      if (!brainDrag) { brainTgtY += 0.003; }
       brainRotY += (brainTgtY-brainRotY)*0.06;
       brainRotX += (brainTgtX-brainRotX)*0.06;
       brainGroup.rotation.y = brainRotY;
