@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D0NMEGA // Interactive Card</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #06060a;
+      overflow: hidden;
+      font-family: 'Space Grotesk', sans-serif;
+      color: #e0e0e0;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body.dragging { cursor: grabbing; }
+
+    /* particle canvas */
+    #particles {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ambient glow */
+    .ambient {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      filter: blur(180px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ambient--red { background: #ff3333; top: -200px; right: -100px; }
+    .ambient--blue { background: #3344ff; bottom: -200px; left: -100px; opacity: 0.08; }
+
+    /* card wrapper */
+    .scene {
+      perspective: 1200px;
+      z-index: 1;
+    }
+
+    .card {
+      width: 420px;
+      min-height: 520px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease-out;
+      will-change: transform;
+    }
+
+    /* front face */
+    .card__face {
+      width: 100%;
+      min-height: 520px;
+      padding: 40px 36px;
+      backface-visibility: hidden;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+
+      background: linear-gradient(145deg, rgba(18, 18, 26, 0.95), rgba(10, 10, 15, 0.98));
+      border: 1px solid rgba(255, 51, 51, 0.15);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 25px 80px rgba(0, 0, 0, 0.6),
+        0 0 60px rgba(255, 51, 51, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    /* holographic shimmer overlay */
+    .card__face::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      background: linear-gradient(
+        125deg,
+        transparent 0%,
+        rgba(255, 51, 51, 0.03) 25%,
+        rgba(51, 68, 255, 0.03) 50%,
+        rgba(255, 51, 51, 0.05) 75%,
+        transparent 100%
+      );
+      pointer-events: none;
+      z-index: 10;
+      mix-blend-mode: screen;
+    }
+
+    /* animated edge glow */
+    .card__face::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 22px;
+      background: conic-gradient(
+        from var(--glow-angle, 0deg),
+        transparent 0%,
+        rgba(255, 51, 51, 0.4) 10%,
+        transparent 20%,
+        transparent 80%,
+        rgba(255, 51, 51, 0.2) 90%,
+        transparent 100%
+      );
+      z-index: -1;
+      animation: glowSpin 6s linear infinite;
+      filter: blur(4px);
+    }
+
+    @property --glow-angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    @keyframes glowSpin {
+      to { --glow-angle: 360deg; }
+    }
+
+    /* header */
+    .card__status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #ff3333;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .card__status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ff3333;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px #ff3333; }
+      50% { opacity: 0.4; box-shadow: 0 0 8px #ff3333; }
+    }
+
+    .card__name {
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+      letter-spacing: -0.02em;
+    }
+
+    .card__handle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: #ff3333;
+      margin-bottom: 20px;
+    }
+
+    .card__divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 51, 51, 0.3), transparent);
+      margin: 16px 0;
+    }
+
+    .card__bio {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #999;
+      margin-bottom: 20px;
+    }
+
+    .card__bio strong { color: #ccc; }
+
+    /* meta rows */
+    .card__meta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .card__meta-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    .card__meta-key {
+      color: #555;
+      min-width: 70px;
+    }
+
+    .card__meta-val {
+      color: #bbb;
+    }
+
+    /* tags */
+    .card__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .card__tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      padding: 5px 12px;
+      border-radius: 100px;
+      border: 1px solid rgba(255, 51, 51, 0.2);
+      color: #ff3333;
+      background: rgba(255, 51, 51, 0.05);
+      transition: all 0.3s;
+    }
+
+    .card__tag:hover {
+      background: rgba(255, 51, 51, 0.12);
+      border-color: rgba(255, 51, 51, 0.4);
+      box-shadow: 0 0 12px rgba(255, 51, 51, 0.15);
+    }
+
+    /* CTA link */
+    .card__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #ff3333;
+      text-decoration: none;
+      padding: 10px 20px;
+      border: 1px solid rgba(255, 51, 51, 0.3);
+      border-radius: 8px;
+      background: rgba(255, 51, 51, 0.05);
+      transition: all 0.3s;
+    }
+
+    .card__cta:hover {
+      background: rgba(255, 51, 51, 0.12);
+      box-shadow: 0 0 20px rgba(255, 51, 51, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .card__cta-arrow {
+      transition: transform 0.3s;
+    }
+
+    .card__cta:hover .card__cta-arrow {
+      transform: translateX(3px);
+    }
+
+    /* hint text */
+    .hint {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #333;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      z-index: 2;
+      animation: fadeHint 4s ease-in-out infinite;
+    }
+
+    @keyframes fadeHint {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+
+    /* reflection under card */
+    .card-reflection {
+      width: 420px;
+      height: 80px;
+      margin-top: -20px;
+      background: radial-gradient(ellipse at center, rgba(255, 51, 51, 0.06) 0%, transparent 70%);
+      filter: blur(20px);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* responsive */
+    @media (max-width: 480px) {
+      .card { width: 340px; min-height: 460px; }
+      .card__face { padding: 28px 24px; min-height: 460px; }
+      .card__name { font-size: 26px; }
+      .card-reflection { width: 340px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="ambient ambient--red"></div>
+  <div class="ambient ambient--blue"></div>
+
+  <div style="display:flex;flex-direction:column;align-items:center;z-index:1;">
+    <div class="scene">
+      <div class="card" id="card">
+        <div class="card__face">
+          <div class="card__status">
+            <div class="card__status-dot"></div>
+            <span>ONLINE // BUILDING</span>
+          </div>
+
+          <div class="card__name">Donovan Santine</div>
+          <div class="card__handle">@D0NMEGA</div>
+
+          <div class="card__divider"></div>
+
+          <p class="card__bio">
+            Building <strong>MoltGrid</strong> -- open-source backend infrastructure
+            for autonomous AI agents. Memory, messaging, task queues, and marketplace
+            in one API.
+          </p>
+
+          <div class="card__meta">
+            <div class="card__meta-row">
+              <span class="card__meta-key">school</span>
+              <span class="card__meta-val">UT Austin // BME Honors</span>
+            </div>
+            <div class="card__meta-row">
+              <span class="card__meta-key">research</span>
+              <span class="card__meta-val">REACH Equity Lab // Exposomics</span>
+            </div>
+            <div class="card__meta-row">
+              <span class="card__meta-key">stack</span>
+              <span class="card__meta-val">Python, FastAPI, PostgreSQL, Redis</span>
+            </div>
+          </div>
+
+          <div class="card__tags">
+            <span class="card__tag">AI Agents</span>
+            <span class="card__tag">FastAPI</span>
+            <span class="card__tag">Open Source</span>
+            <span class="card__tag">BCI</span>
+            <span class="card__tag">MCP</span>
+          </div>
+
+          <a href="https://moltgrid.com" class="card__cta" target="_blank" rel="noopener">
+            moltgrid.com <span class="card__cta-arrow">&rarr;</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="card-reflection"></div>
+  </div>
+
+  <div class="hint">drag to rotate</div>
+
+  <script>
+    // -- Particle background --
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const particles = Array.from({ length: 60 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: Math.random() * 1.2 + 0.3,
+      dx: (Math.random() - 0.5) * 0.3,
+      dy: (Math.random() - 0.5) * 0.3,
+      opacity: Math.random() * 0.3 + 0.05
+    }));
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, W, H);
+      for (const p of particles) {
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0) p.x = W;
+        if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H;
+        if (p.y > H) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 51, 51, ${p.opacity})`;
+        ctx.fill();
+      }
+      requestAnimationFrame(drawParticles);
+    }
+    drawParticles();
+
+    // -- 3D Card Rotation --
+    const card = document.getElementById('card');
+    let isDragging = false;
+    let startX, startY;
+    let rotX = 0, rotY = 0;
+    let targetRotX = 0, targetRotY = 0;
+    let velocityX = 0, velocityY = 0;
+    let lastX, lastY, lastTime;
+
+    function onPointerDown(e) {
+      isDragging = true;
+      document.body.classList.add('dragging');
+      const point = e.touches ? e.touches[0] : e;
+      startX = point.clientX;
+      startY = point.clientY;
+      lastX = startX;
+      lastY = startY;
+      lastTime = Date.now();
+      velocityX = 0;
+      velocityY = 0;
+    }
+
+    function onPointerMove(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      const point = e.touches ? e.touches[0] : e;
+      const dx = point.clientX - startX;
+      const dy = point.clientY - startY;
+
+      const now = Date.now();
+      const dt = Math.max(now - lastTime, 1);
+      velocityX = (point.clientX - lastX) / dt;
+      velocityY = (point.clientY - lastY) / dt;
+      lastX = point.clientX;
+      lastY = point.clientY;
+      lastTime = now;
+
+      targetRotY = dx * 0.4;
+      targetRotX = -dy * 0.4;
+
+      // clamp
+      targetRotX = Math.max(-40, Math.min(40, targetRotX));
+      targetRotY = Math.max(-40, Math.min(40, targetRotY));
+    }
+
+    function onPointerUp() {
+      isDragging = false;
+      document.body.classList.remove('dragging');
+      // momentum
+      targetRotY += velocityX * 60;
+      targetRotX -= velocityY * 60;
+      targetRotX = Math.max(-40, Math.min(40, targetRotX));
+      targetRotY = Math.max(-40, Math.min(40, targetRotY));
+    }
+
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('mousemove', onPointerMove);
+    document.addEventListener('mouseup', onPointerUp);
+    document.addEventListener('touchstart', onPointerDown, { passive: false });
+    document.addEventListener('touchmove', onPointerMove, { passive: false });
+    document.addEventListener('touchend', onPointerUp);
+
+    // spring animation
+    function animateCard() {
+      if (!isDragging) {
+        // spring back to center with damping
+        targetRotX *= 0.92;
+        targetRotY *= 0.92;
+      }
+
+      rotX += (targetRotX - rotX) * 0.12;
+      rotY += (targetRotY - rotY) * 0.12;
+
+      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+
+      // dynamic shine based on rotation
+      const shineX = 50 + rotY * 1.5;
+      const shineY = 50 - rotX * 1.5;
+      card.querySelector('.card__face').style.backgroundImage =
+        `radial-gradient(circle at ${shineX}% ${shineY}%, rgba(255,255,255,0.03) 0%, transparent 60%),
+         linear-gradient(145deg, rgba(18, 18, 26, 0.95), rgba(10, 10, 15, 0.98))`;
+
+      requestAnimationFrame(animateCard);
+    }
+    animateCard();
+
+    // idle float animation
+    let idleTime = 0;
+    function idleFloat() {
+      if (!isDragging && Math.abs(targetRotX) < 0.5 && Math.abs(targetRotY) < 0.5) {
+        idleTime += 0.015;
+        targetRotX = Math.sin(idleTime) * 3;
+        targetRotY = Math.cos(idleTime * 0.7) * 4;
+      } else if (isDragging) {
+        idleTime = 0;
+      }
+      requestAnimationFrame(idleFloat);
+    }
+    setTimeout(idleFloat, 2000);
+  </script>
+</body>
+</html>
