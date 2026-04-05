@@ -143,12 +143,12 @@
         cite: 'Velten 1968; Bradley & Lang 1999 (ANEW); Lindquist et al. 2012; Kober et al. 2008',
         // MNI coords: [x, y, z, radius, intensity]
         centers: [
-          [2, 38, -18, 12, 1.0],     // medial OFC / vmPFC (BA 11)
-          [-44, 36, 28, 14, 0.95],   // left DLPFC (BA 46)
-          [56, -14, 4, 12, 0.85],    // right superior temporal gyrus
-          [10, 8, -4, 10, 0.9],      // ventral striatum / NAcc
-          [-38, 16, -30, 11, 0.7],   // left temporal pole
-          [-40, -30, 56, 12, 0.6],   // somatosensory cortex
+          [-44, 36, 28, 18, 1.0],    // left DLPFC (BA 46) -- lateral, visible
+          [56, -14, 4, 16, 0.9],     // right superior temporal gyrus -- lateral
+          [-50, 30, 10, 16, 0.85],   // left inferior frontal -- lateral echo of OFC
+          [-38, 16, -30, 16, 0.8],   // left temporal pole -- lateral
+          [-40, -30, 56, 16, 0.75],  // somatosensory cortex -- lateral
+          [50, 30, 10, 14, 0.7],     // right inferior frontal -- lateral echo
         ],
         baseColor: [0.08, 0.12, 0.22],
         hotColor: [1.0, 0.75, 0.1]
@@ -159,12 +159,12 @@
         regions: 'Ventral striatum, caudate nucleus, A1 auditory cortex (BA 41), anterior insula (BA 13)',
         cite: 'Blood & Zatorre 2001; Wassiliwizky et al. 2017; Nusbaum & Silvia 2011',
         centers: [
-          [12, 10, -6, 10, 1.0],     // ventral striatum
-          [-48, -22, 8, 13, 0.95],   // left A1 / Heschl's gyrus
-          [48, -22, 8, 13, 0.95],    // right A1 / Heschl's gyrus
-          [-38, 18, 0, 11, 0.9],     // left anterior insula
-          [38, 18, 0, 11, 0.9],      // right anterior insula
-          [10, 14, 6, 10, 0.8],      // caudate nucleus
+          [-48, -22, 8, 18, 1.0],    // left A1 / Heschl's gyrus -- lateral
+          [48, -22, 8, 18, 1.0],     // right A1 / Heschl's gyrus -- lateral
+          [-55, -8, -2, 16, 0.9],    // left superior temporal -- lateral echo
+          [55, -8, -2, 16, 0.9],     // right superior temporal -- lateral echo
+          [-38, 18, 0, 14, 0.8],     // left anterior insula -- partially lateral
+          [38, 18, 0, 14, 0.8],      // right anterior insula
         ],
         baseColor: [0.06, 0.10, 0.25],
         hotColor: [0.3, 0.6, 1.0]
@@ -175,12 +175,12 @@
         regions: 'Subgenual ACC (BA 25), anterior insula (BA 13), amygdala, posterior cingulate',
         cite: 'Velten 1968; Gerrards-Hesse et al. 1994; Lindquist et al. 2012; Kober et al. 2008',
         centers: [
-          [2, 14, -8, 11, 1.0],      // subgenual cingulate BA 25
-          [-24, -4, -18, 12, 0.95],  // left amygdala
-          [24, -4, -18, 12, 0.95],   // right amygdala
-          [-38, 6, 2, 11, 0.9],      // left anterior insula
-          [4, 30, 24, 12, 0.85],     // dorsal ACC
-          [0, -52, 28, 13, 0.7],     // posterior cingulate
+          [-38, 6, 2, 16, 1.0],      // left anterior insula -- lateral
+          [38, 6, 2, 16, 1.0],       // right anterior insula -- lateral
+          [-35, 8, -28, 16, 0.9],    // left anterior temporal -- amygdala surface echo
+          [35, 8, -28, 16, 0.9],     // right anterior temporal -- amygdala echo
+          [-45, 38, 8, 14, 0.75],    // left ventrolateral PFC -- lateral echo of sgACC
+          [0, -52, 28, 16, 0.7],     // posterior cingulate/precuneus
         ],
         baseColor: [0.08, 0.06, 0.15],
         hotColor: [0.4, 0.15, 0.7]
@@ -191,12 +191,12 @@
         regions: 'Amygdala (bilateral), anterior insula (BA 13), dorsal ACC (BA 32), visual cortex',
         cite: 'Spielberger 1983; Lindquist et al. 2012; Saarimaki et al. 2016; Lench et al. 2011',
         centers: [
-          [-22, -6, -16, 12, 1.0],   // left amygdala
-          [22, -6, -16, 12, 1.0],    // right amygdala
-          [-38, 6, 2, 12, 0.95],     // left anterior insula
-          [38, 6, 2, 12, 0.95],      // right anterior insula
-          [4, 24, 36, 12, 0.85],     // dorsal ACC
-          [-8, -84, 4, 11, 0.6],     // V1 visual cortex
+          [-38, 6, 2, 18, 1.0],      // left anterior insula -- lateral
+          [38, 6, 2, 18, 1.0],       // right anterior insula -- lateral
+          [-32, 4, -24, 16, 0.95],   // left anterior temporal -- amygdala surface echo
+          [32, 4, -24, 16, 0.95],    // right anterior temporal -- amygdala echo
+          [-48, -68, 4, 14, 0.7],    // left lateral occipital -- threat visual processing
+          [48, -68, 4, 14, 0.7],     // right lateral occipital
         ],
         baseColor: [0.12, 0.04, 0.04],
         hotColor: [1.0, 0.15, 0.08]
@@ -207,12 +207,12 @@
         regions: 'TPJ (BA 39/40), dmPFC (BA 9), precuneus (BA 7), anterior insula',
         cite: 'Keltner & Haidt 2003; Piff et al. 2015; Yaden et al. 2017; Stellar et al. 2017',
         centers: [
-          [-52, -56, 26, 14, 1.0],   // left TPJ (BA 39)
-          [52, -56, 26, 14, 1.0],    // right TPJ
-          [0, 52, 12, 12, 0.85],     // medial PFC (BA 10)
-          [4, 42, 34, 12, 0.8],      // dorsomedial PFC (BA 9)
-          [0, -66, 36, 13, 0.75],    // precuneus (BA 7)
-          [-8, -84, 4, 11, 0.65],    // visual cortex
+          [-52, -56, 26, 18, 1.0],   // left TPJ (BA 39) -- lateral
+          [52, -56, 26, 18, 1.0],    // right TPJ -- lateral
+          [-48, 38, 16, 16, 0.85],   // left lateral PFC -- echo of dmPFC
+          [48, 38, 16, 16, 0.85],    // right lateral PFC
+          [-38, -72, 24, 16, 0.75],  // left lateral parietal/occipital
+          [38, -72, 24, 16, 0.75],   // right lateral parietal/occipital
         ],
         baseColor: [0.05, 0.10, 0.18],
         hotColor: [0.2, 0.9, 0.8]
@@ -351,9 +351,9 @@
         for (const [cx, cy, cz, radius, intensity] of emo.centers) {
           const dx = vx-cx, dy = vy-cy, dz = vz-cz;
           const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-          // Sharp Gaussian with power curve for tight focal hotspots
+          // Squared Gaussian for focal but visible hotspots
           let a = intensity * Math.exp(-(dist*dist) / (2*radius*radius));
-          a = a * a * a; // cube for sharp falloff -- only near-center vertices glow
+          a = a * a; // square for sharp falloff while staying visible
           if (a > maxAct) maxAct = a;
         }
         // Hard threshold: below 0.05 = no activation visible
