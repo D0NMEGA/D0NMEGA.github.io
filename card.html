@@ -114,6 +114,7 @@
     <div class="stimulus__label" id="stim-label"></div>
     <div class="stimulus__text" id="stim-text"></div>
     <div class="stimulus__region" id="stim-region"></div>
+    <div class="stimulus__region" id="stim-cite" style="color:#333;margin-top:4px"></div>
   </div>
 
   <div class="emo-panel">
@@ -136,77 +137,82 @@
     // ---- emotion definitions ----
     const EMOTIONS = {
       happiness: {
-        label: 'MAXIMIZING HAPPINESS',
-        text: 'You just got the call. Full ride. Everything you worked for, every late night, every doubt you pushed through -- it all led here. Your mom is crying on the other end. You can hear your little brother shouting in the background. You made it.',
-        regions: 'Left DLPFC, orbitofrontal cortex, ventral striatum, temporal pole',
-        // activation centers: [x, y, z, radius, intensity]
+        label: 'MAXIMIZING HAPPINESS // Velten Induction + ANEW',
+        text: 'Life is so much fun; it seems to offer so many sources of fulfillment. I feel so content right now -- like everything in my life has come together. The people I love are healthy, I am doing exactly what I was meant to do, and every challenge I faced brought me here. I can feel it in my chest -- warm, radiating, full.',
+        regions: 'vmPFC (BA 11), R superior temporal gyrus, ventral striatum, L DLPFC (BA 46)',
+        cite: 'Velten 1968; Bradley & Lang 1999 (ANEW); Lindquist et al. 2012; Kober et al. 2008',
+        // MNI coords: [x, y, z, radius, intensity]
         centers: [
-          [-42, 28, 28, 30, 1.0],   // left DLPFC
-          [-30, 48, -8, 25, 0.9],    // left OFC
-          [30, 48, -8, 25, 0.8],     // right OFC
-          [48, 12, -28, 22, 0.7],    // right temporal pole
-          [-48, 12, -28, 22, 0.7],   // left temporal pole
-          [0, 8, -5, 18, 0.85],      // ventral striatum (deep, but surface echo)
+          [2, 38, -18, 26, 1.0],     // medial OFC / vmPFC (BA 11) -- Kober 2008
+          [-44, 36, 28, 28, 0.95],   // left DLPFC (BA 46) -- Lindquist 2012
+          [56, -14, 4, 24, 0.85],    // right superior temporal gyrus -- Lindquist 2012
+          [10, 8, -4, 20, 0.9],      // ventral striatum / NAcc -- Kober 2008
+          [-38, 16, -30, 22, 0.7],   // left temporal pole
+          [-40, -30, 56, 20, 0.6],   // somatosensory cortex -- Saarimaki 2016
         ],
         baseColor: [0.08, 0.12, 0.22],
         hotColor: [1.0, 0.75, 0.1]
       },
       chills: {
-        label: 'INDUCING FRISSON',
-        text: 'The orchestra swells. A single violin holds a note so pure it feels like it is reaching inside you and pulling something out. Your arms prickle. The hair on the back of your neck rises. For one perfect second, you are nothing but the music.',
-        regions: 'Auditory cortex, anterior insula, orbitofrontal cortex, supplementary motor area',
+        label: 'INDUCING FRISSON // Wassiliwizky et al. 2017',
+        text: 'A lone cello begins in a dark hall. The melody climbs -- each phrase dissolving the one before it, building toward something you cannot name. Then the choir enters, a hundred voices becoming one, and the sound opens a door in your chest you forgot was there. Your skin prickles. Tears arrive without sadness. You are being held by something vast and invisible.',
+        regions: 'Ventral striatum, caudate nucleus, A1 auditory cortex (BA 41), anterior insula (BA 13)',
+        cite: 'Blood & Zatorre 2001; Wassiliwizky et al. 2017; Nusbaum & Silvia 2011',
         centers: [
-          [-58, -18, 8, 28, 1.0],    // left auditory cortex
-          [58, -18, 8, 28, 1.0],     // right auditory cortex
-          [-35, 15, -8, 22, 0.9],    // left anterior insula
-          [35, 15, -8, 22, 0.9],     // right anterior insula
-          [0, 52, -10, 20, 0.75],    // medial OFC
-          [0, -5, 62, 22, 0.6],      // SMA
+          [12, 10, -6, 22, 1.0],     // ventral striatum -- Blood & Zatorre 2001
+          [-48, -22, 8, 26, 0.95],   // left A1 / Heschl's gyrus (BA 41)
+          [48, -22, 8, 26, 0.95],    // right A1 / Heschl's gyrus
+          [-38, 18, 0, 22, 0.9],     // left anterior insula (BA 13)
+          [38, 18, 0, 22, 0.9],      // right anterior insula
+          [10, 14, 6, 18, 0.8],      // caudate nucleus -- Wassiliwizky 2017
         ],
         baseColor: [0.06, 0.10, 0.25],
         hotColor: [0.3, 0.6, 1.0]
       },
       sadness: {
-        label: 'DEEP SADNESS',
-        text: 'The chair at the table is still there. No one moved it. Her coffee mug is in the sink, lipstick on the rim. The house smells the same. Everything is exactly where she left it. Everything except her.',
-        regions: 'Amygdala, subgenual ACC, anterior insula, posterior cingulate',
+        label: 'DEEP SADNESS // Velten + Gerrards-Hesse 1994',
+        text: 'Every now and then I feel so tired and gloomy that I would rather just sit than do anything. I just do not seem to be able to get going as fast as I used to. Things are worse now than when I was younger. The people I used to count on have gone quiet. I keep rereading old messages, looking for something I already know is not there anymore.',
+        regions: 'Subgenual ACC (BA 25), anterior insula (BA 13), amygdala, posterior cingulate',
+        cite: 'Velten 1968; Gerrards-Hesse et al. 1994; Lindquist et al. 2012; Kober et al. 2008',
         centers: [
-          [-22, -4, -18, 22, 1.0],   // left amygdala
-          [22, -4, -18, 22, 1.0],    // right amygdala
-          [0, 28, -8, 20, 0.9],      // subgenual ACC
-          [-36, 8, 2, 22, 0.85],     // left insula
-          [36, 8, 2, 22, 0.85],      // right insula
-          [0, -52, 28, 25, 0.7],     // posterior cingulate
+          [2, 14, -8, 22, 1.0],      // subgenual cingulate BA 25 -- Kober 2008 (DBS target)
+          [-24, -4, -18, 22, 0.95],  // left amygdala -- Lindquist 2012
+          [24, -4, -18, 22, 0.95],   // right amygdala
+          [-38, 6, 2, 22, 0.9],      // left anterior insula (BA 13)
+          [4, 30, 24, 22, 0.85],     // dorsal ACC (BA 24/32) -- Lindquist 2012
+          [0, -52, 28, 24, 0.7],     // posterior cingulate / precuneus
         ],
         baseColor: [0.08, 0.06, 0.15],
         hotColor: [0.4, 0.15, 0.7]
       },
       fear: {
-        label: 'INDUCING FEAR',
-        text: 'The basement light flickers once and dies. In the silence you hear it -- breathing that is not yours. Slow. Wet. Close. Something shifts in the dark, and you realize the door behind you just clicked shut.',
-        regions: 'Amygdala (bilateral), anterior insula, dorsal ACC, periaqueductal gray',
+        label: 'INDUCING FEAR // Spielberger STAI paradigm',
+        text: 'You are walking alone at night down a dark, unfamiliar street. You hear footsteps behind you that speed up when you speed up. Your heart slams. You turn a corner and the street dead-ends at a wall. The footsteps stop. The silence is worse. You turn around, and something is standing between you and the only way out.',
+        regions: 'Amygdala (bilateral), anterior insula (BA 13), dorsal ACC (BA 32), visual cortex',
+        cite: 'Spielberger 1983; Lindquist et al. 2012; Saarimaki et al. 2016; Lench et al. 2011',
         centers: [
-          [-20, -6, -18, 25, 1.0],   // left amygdala
-          [20, -6, -18, 25, 1.0],    // right amygdala
-          [-34, 12, 0, 24, 0.95],    // left anterior insula
-          [34, 12, 0, 24, 0.95],     // right anterior insula
-          [0, 18, 38, 22, 0.85],     // dorsal ACC
-          [0, -80, 5, 20, 0.6],      // visual cortex (threat detection)
+          [-22, -6, -16, 24, 1.0],   // left amygdala -- most replicated, Lindquist 2012
+          [22, -6, -16, 24, 1.0],    // right amygdala
+          [-38, 6, 2, 24, 0.95],     // left anterior insula (BA 13) -- Lindquist 2012
+          [38, 6, 2, 24, 0.95],      // right anterior insula
+          [4, 24, 36, 22, 0.85],     // dorsal ACC (BA 32) -- Lindquist 2012
+          [-8, -84, 4, 20, 0.6],     // V1 visual cortex -- threat detection
         ],
         baseColor: [0.12, 0.04, 0.04],
         hotColor: [1.0, 0.15, 0.08]
       },
       awe: {
-        label: 'INSPIRING AWE',
-        text: 'You step out of the shuttle airlock. Below you, the entire Earth rotates in silence. Every war, every love story, every song ever written is on that pale blue curve. And you are floating above it all, weightless, watching continents drift under clouds.',
-        regions: 'Temporoparietal junction, dmPFC, precuneus, visual cortex',
+        label: 'INSPIRING AWE // Keltner & Haidt 2003; Piff et al. 2015',
+        text: 'You stand at the edge and look up. The trees are 200 feet tall and older than any nation. The canopy filters the light into cathedral beams. You feel the scale of it press down on your sense of self until you are not a person anymore -- just a witness. Something vast and ancient is looking back at you through the bark and the silence, and you do not want to leave.',
+        regions: 'TPJ (BA 39/40), dmPFC (BA 9), precuneus (BA 7), anterior insula',
+        cite: 'Keltner & Haidt 2003; Piff et al. 2015; Yaden et al. 2017; Stellar et al. 2017',
         centers: [
-          [-52, -55, 28, 28, 1.0],   // left TPJ
-          [52, -55, 28, 28, 1.0],    // right TPJ
-          [0, 52, 35, 24, 0.85],     // dorsomedial PFC
-          [0, -65, 35, 26, 0.8],     // precuneus
-          [0, -85, 8, 22, 0.7],      // visual cortex
-          [0, 40, -12, 20, 0.65],    // vmPFC (self-transcendence)
+          [-52, -56, 26, 26, 1.0],   // left TPJ (BA 39) -- Guan et al. 2019
+          [52, -56, 26, 26, 1.0],    // right TPJ
+          [0, 52, 12, 24, 0.85],     // medial PFC (BA 10) -- Yaden et al. (decreased DMN)
+          [4, 42, 34, 22, 0.8],      // dorsomedial PFC (BA 9)
+          [0, -66, 36, 24, 0.75],    // precuneus (BA 7)
+          [-8, -84, 4, 20, 0.65],    // visual cortex
         ],
         baseColor: [0.05, 0.10, 0.18],
         hotColor: [0.2, 0.9, 0.8]
@@ -305,7 +311,8 @@
     brainGroup.add(buildHemisphere(meshData.right));
     brainGroup.scale.set(0.3, 0.3, 0.3);
     brainGroup.position.set(-18, 0, 0);
-    brainGroup.rotation.set(-0.1, -1.2, 0.05);
+    // RAS -> Three.js Y-up: PI/2 on X aligns superior with Y-up, PI on Y gives left lateral view
+    brainGroup.rotation.set(Math.PI / 2, Math.PI, 0);
     scene.add(brainGroup);
 
     // ---- particles ----
@@ -370,6 +377,7 @@
       document.getElementById('stim-label').textContent = emo.label;
       document.getElementById('stim-text').textContent = emo.text;
       document.getElementById('stim-region').textContent = 'Regions: ' + emo.regions;
+      document.getElementById('stim-cite').textContent = emo.cite || '';
       stimEl.classList.add('visible');
 
       const btn = document.querySelector(`[data-emo="${emotion}"]`);
@@ -388,8 +396,8 @@
     setTimeout(() => loaderEl.classList.add('hidden'), 300);
 
     // ---- brain drag ----
-    let brainDrag = false, brainRotY = -1.2, brainRotX = -0.1;
-    let brainTgtY = -1.2, brainTgtX = -0.1;
+    let brainDrag = false, brainRotY = Math.PI, brainRotX = Math.PI / 2;
+    let brainTgtY = Math.PI, brainTgtX = Math.PI / 2;
     let bLX = 0, bLY = 0, bVX = 0, bVY = 0, bLT = 0;
 
     function bDown(x,y){brainDrag=true;canvas.classList.add('dragging');bLX=x;bLY=y;bLT=Date.now();bVX=0;bVY=0}
