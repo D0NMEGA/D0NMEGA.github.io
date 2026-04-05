@@ -239,19 +239,20 @@
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 2000);
-    camera.position.set(-30, 8, 110);
-    camera.lookAt(-8, 0, 0);
+    // Look from left side (-X in brain space maps to -Z in Three.js after rotation)
+    camera.position.set(-18, 8, -100);
+    camera.lookAt(-18, 0, 0);
 
     // ---- lights ----
     scene.add(new THREE.AmbientLight(0x444466, 0.5));
     const keyLight = new THREE.DirectionalLight(0xffeedd, 0.9);
-    keyLight.position.set(40, 50, 80);
+    keyLight.position.set(-40, 50, -60);
     scene.add(keyLight);
     const rimLight = new THREE.PointLight(0xff3333, 2.5, 150);
-    rimLight.position.set(-50, 20, -40);
+    rimLight.position.set(20, 20, 50);
     scene.add(rimLight);
     const fillLight = new THREE.PointLight(0x3344ff, 0.5, 120);
-    fillLight.position.set(40, -20, 30);
+    fillLight.position.set(-30, -20, -40);
     scene.add(fillLight);
 
     // ---- heatmap colormap ----
@@ -311,8 +312,9 @@
     brainGroup.add(buildHemisphere(meshData.right));
     brainGroup.scale.set(0.3, 0.3, 0.3);
     brainGroup.position.set(-18, 0, 0);
-    // RAS -> Three.js Y-up: -PI/2 on X maps Z(superior)->Y(up), -PI/2 on Y gives left lateral view
-    brainGroup.rotation.set(-Math.PI / 2, -Math.PI / 2, 0);
+    // RAS -> Three.js: only need -PI/2 on X to map Z(superior)->Y(up)
+    // Camera positioned on -X axis to get left lateral view
+    brainGroup.rotation.set(-Math.PI / 2, 0, 0);
     scene.add(brainGroup);
 
     // ---- particles ----
@@ -322,9 +324,9 @@
     const pVel = [];
     for (let i = 0; i < pCount; i++) {
       const th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1), r = 20+Math.random()*30;
-      pPos[i*3] = r*Math.sin(ph)*Math.cos(th)-18;
+      pPos[i*3] = r*Math.sin(ph)*Math.cos(th) - 18;
       pPos[i*3+1] = r*Math.sin(ph)*Math.sin(th);
-      pPos[i*3+2] = r*Math.cos(ph);
+      pPos[i*3+2] = r*Math.cos(ph) - 0;
       pVel.push({x:(Math.random()-0.5)*0.02,y:(Math.random()-0.5)*0.02,z:(Math.random()-0.5)*0.02});
     }
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
@@ -396,8 +398,8 @@
     setTimeout(() => loaderEl.classList.add('hidden'), 300);
 
     // ---- brain drag ----
-    let brainDrag = false, brainRotY = -Math.PI / 2, brainRotX = -Math.PI / 2;
-    let brainTgtY = -Math.PI / 2, brainTgtX = -Math.PI / 2;
+    let brainDrag = false, brainRotY = 0, brainRotX = -Math.PI / 2;
+    let brainTgtY = 0, brainTgtX = -Math.PI / 2;
     let bLX = 0, bLY = 0, bVX = 0, bVY = 0, bLT = 0;
 
     function bDown(x,y){brainDrag=true;canvas.classList.add('dragging');bLX=x;bLY=y;bLT=Date.now();bVX=0;bVY=0}
@@ -445,15 +447,21 @@
           const colAttr = h.mesh.geometry.attributes.color;
           const tActs = targetActivations[hi];
           for (let i = 0; i < h.vCount; i++) {
-            // blend: base activity color -> emotion-highlighted color
             const baseC = defaultColor(h.activity[i]);
             const emotionAct = tActs[i];
-            const emoC = lerpColor(emo.baseColor, emo.hotColor, emotionAct);
-            // mix between default and emotion state
-            const finalC = lerpColor(baseC, emoC, ease);
-            colAttr.array[i*3]   = finalC[0];
-            colAttr.array[i*3+1] = finalC[1];
-            colAttr.array[i*3+2] = finalC[2];
+            // Only blend vertices that have activation > threshold
+            // Non-active vertices stay at their default anatomical color
+            const blendAmount = emotionAct * ease;
+            if (blendAmount < 0.01) {
+              colAttr.array[i*3]   = baseC[0];
+              colAttr.array[i*3+1] = baseC[1];
+              colAttr.array[i*3+2] = baseC[2];
+            } else {
+              // Hot regions get the emotion's hot color overlaid on base
+              colAttr.array[i*3]   = baseC[0] + (emo.hotColor[0] - baseC[0]) * blendAmount;
+              colAttr.array[i*3+1] = baseC[1] + (emo.hotColor[1] - baseC[1]) * blendAmount;
+              colAttr.array[i*3+2] = baseC[2] + (emo.hotColor[2] - baseC[2]) * blendAmount;
+            }
           }
           colAttr.needsUpdate = true;
         });
