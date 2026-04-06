@@ -431,7 +431,7 @@
       time += 0.01;
 
       // brain rotation -- Z axis spin (nose-to-tail axis in lateral view)
-      if (!brainDrag) { brainTgtY += 0.003; }
+      if (!brainDrag) { brainTgtY += 0.015; }
       brainRotY += (brainTgtY-brainRotY)*0.06;
       brainRotX += (brainTgtX-brainRotX)*0.06;
       brainGroup.rotation.x = brainRotX;
