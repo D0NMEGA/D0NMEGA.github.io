@@ -7,7 +7,7 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;600;700&display=swap');
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    :root{--bg:#06060a;--accent:#ff3333;--accent-dim:rgba(255,51,51,0.06);--mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif;--heading:'Archivo',sans-serif}
+    :root{--bg:#06060a;--accent:#7dd3fc;--accent-dim:rgba(125,211,252,0.06);--mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif;--heading:'Archivo',sans-serif}
     body{min-height:100vh;background:var(--bg);font-family:var(--sans);color:#e0e0e0;overflow:hidden;user-select:none;-webkit-user-select:none}
 
     #brain-canvas{position:fixed;inset:0;z-index:0;cursor:grab}
@@ -28,8 +28,8 @@
     .card-wrap{position:fixed;right:5vw;top:50%;transform:translateY(-50%);z-index:5;perspective:1200px}
     .card{width:340px;transform-style:preserve-3d;will-change:transform;cursor:grab}
     .card.dragging{cursor:grabbing}
-    .card__face{padding:32px 28px;border-radius:16px;position:relative;overflow:hidden;backface-visibility:hidden;background:linear-gradient(145deg,rgba(14,14,20,0.96),rgba(8,8,12,0.98));border:1px solid rgba(255,51,51,0.12);box-shadow:0 0 0 1px rgba(255,255,255,0.02),0 30px 80px rgba(0,0,0,0.5),0 0 50px var(--accent-dim)}
-    .card__face::after{content:'';position:absolute;inset:-2px;border-radius:18px;background:conic-gradient(from var(--glow-angle,0deg),transparent 0%,rgba(255,51,51,0.3)8%,transparent 16%,transparent 84%,rgba(255,51,51,0.15)92%,transparent 100%);z-index:-1;animation:edgeSpin 8s linear infinite;filter:blur(3px)}
+    .card__face{padding:32px 28px;border-radius:16px;position:relative;overflow:hidden;backface-visibility:hidden;background:linear-gradient(145deg,rgba(14,14,20,0.96),rgba(8,8,12,0.98));border:1px solid rgba(125,211,252,0.12);box-shadow:0 0 0 1px rgba(255,255,255,0.02),0 30px 80px rgba(0,0,0,0.5),0 0 50px var(--accent-dim)}
+    .card__face::after{content:'';position:absolute;inset:-2px;border-radius:18px;background:conic-gradient(from var(--glow-angle,0deg),transparent 0%,rgba(125,211,252,0.3)8%,transparent 16%,transparent 84%,rgba(125,211,252,0.15)92%,transparent 100%);z-index:-1;animation:edgeSpin 8s linear infinite;filter:blur(3px)}
     @property --glow-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
     @keyframes edgeSpin{to{--glow-angle:360deg}}
 
@@ -38,7 +38,7 @@
     @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
     .card__name{font:700 24px/1.1 var(--heading);color:#fff;letter-spacing:-0.03em;margin-bottom:2px}
     .card__handle{font:400 12px/1 var(--mono);color:var(--accent);margin-bottom:14px}
-    .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,51,51,0.25),transparent);margin:12px 0}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(125,211,252,0.25),transparent);margin:12px 0}
     .card__bio{font:400 12px/1.6 var(--sans);color:#888;margin-bottom:14px}
     .card__bio strong{color:#bbb}
     .meta{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
@@ -46,16 +46,17 @@
     .meta__key{color:#444;min-width:60px}
     .meta__val{color:#999}
     .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
-    .tag{font:400 8px/1 var(--mono);letter-spacing:0.06em;padding:4px 10px;border-radius:100px;border:1px solid rgba(255,51,51,0.18);color:var(--accent);background:var(--accent-dim)}
-    .cta{display:inline-flex;align-items:center;gap:8px;font:500 10px/1 var(--mono);color:var(--accent);text-decoration:none;padding:8px 16px;border:1px solid rgba(255,51,51,0.25);border-radius:8px;background:var(--accent-dim);transition:all 0.3s}
-    .cta:hover{background:rgba(255,51,51,0.12);box-shadow:0 0 18px rgba(255,51,51,0.15)}
+    .tag{font:400 8px/1 var(--mono);letter-spacing:0.06em;padding:4px 10px;border-radius:100px;border:1px solid rgba(125,211,252,0.18);color:var(--accent);background:var(--accent-dim)}
+    .ctas{display:flex;flex-wrap:wrap;gap:8px}
+    .cta{display:inline-flex;align-items:center;gap:8px;font:500 10px/1 var(--mono);color:var(--accent);text-decoration:none;padding:8px 14px;border:1px solid rgba(125,211,252,0.25);border-radius:8px;background:var(--accent-dim);transition:all 0.3s}
+    .cta:hover{background:rgba(125,211,252,0.12);box-shadow:0 0 18px rgba(125,211,252,0.15)}
 
     /* emotion panel */
     .emo-panel{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:14px}
     .emo-buttons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-    .emo-btn{font:500 10px/1 var(--mono);letter-spacing:0.08em;text-transform:uppercase;padding:8px 16px;border-radius:100px;border:1px solid rgba(255,51,51,0.2);color:#888;background:rgba(255,51,51,0.04);cursor:pointer;transition:all 0.3s;outline:none}
-    .emo-btn:hover{color:var(--accent);border-color:rgba(255,51,51,0.4);background:rgba(255,51,51,0.08)}
-    .emo-btn.active{color:#fff;border-color:var(--accent);background:rgba(255,51,51,0.15);box-shadow:0 0 20px rgba(255,51,51,0.15)}
+    .emo-btn{font:500 10px/1 var(--mono);letter-spacing:0.08em;text-transform:uppercase;padding:8px 16px;border-radius:100px;border:1px solid rgba(125,211,252,0.2);color:#888;background:rgba(125,211,252,0.04);cursor:pointer;transition:all 0.3s;outline:none}
+    .emo-btn:hover{color:var(--accent);border-color:rgba(125,211,252,0.4);background:rgba(125,211,252,0.08)}
+    .emo-btn.active{color:#fff;border-color:var(--accent);background:rgba(125,211,252,0.15);box-shadow:0 0 20px rgba(125,211,252,0.15)}
 
     /* stimulus text overlay */
     .stimulus{position:fixed;left:5vw;bottom:140px;max-width:420px;z-index:8;opacity:0;transform:translateY(10px);transition:opacity 0.5s,transform 0.5s;pointer-events:none}
@@ -96,16 +97,21 @@
         <div class="card__name">Donovan Santine</div>
         <div class="card__handle">@D0NMEGA</div>
         <div class="divider"></div>
-        <p class="card__bio">Building <strong>MoltGrid</strong> -- open-source backend for autonomous AI agents. Memory, messaging, task queues, and marketplace in one API.</p>
+        <p class="card__bio">Biomedical engineering at UT Austin. I build <strong>brain-computer interfaces</strong>, the neuroimaging pipelines that feed them, and infrastructure for autonomous agents.</p>
         <div class="meta">
           <div class="meta__row"><span class="meta__key">school</span><span class="meta__val">UT Austin // BME Honors</span></div>
+          <div class="meta__row"><span class="meta__key">bci</span><span class="meta__val">Fable // 2nd, Global NeuroHack 2026</span></div>
           <div class="meta__row"><span class="meta__key">research</span><span class="meta__val">REACH Equity Lab // Exposomics</span></div>
-          <div class="meta__row"><span class="meta__key">stack</span><span class="meta__val">Python, FastAPI, PostgreSQL, Redis</span></div>
+          <div class="meta__row"><span class="meta__key">stack</span><span class="meta__val">Python, NumPy, MNE, FastAPI</span></div>
         </div>
         <div class="tags">
-          <span class="tag">AI Agents</span><span class="tag">FastAPI</span><span class="tag">Open Source</span><span class="tag">BCI</span><span class="tag">MCP</span>
+          <span class="tag">BCI</span><span class="tag">EEG</span><span class="tag">Diffusion MRI</span><span class="tag">AI Agents</span><span class="tag">Open Source</span>
         </div>
-        <a href="https://moltgrid.com" class="cta" target="_blank" rel="noopener">moltgrid.com <span>&rarr;</span></a>
+        <div class="ctas">
+          <a href="https://iniaustin.org" class="cta" target="_blank" rel="noopener">iniaustin.org <span>&rarr;</span></a>
+          <a href="https://moltgrid.net" class="cta" target="_blank" rel="noopener">moltgrid.net <span>&rarr;</span></a>
+          <a href="https://reachequitylab.com" class="cta" target="_blank" rel="noopener">reachequitylab.com <span>&rarr;</span></a>
+        </div>
       </div>
     </div>
   </div>
@@ -248,7 +254,7 @@
     const keyLight = new THREE.DirectionalLight(0xffeedd, 0.9);
     keyLight.position.set(-40, 50, -60);
     scene.add(keyLight);
-    const rimLight = new THREE.PointLight(0xff3333, 2.5, 150);
+    const rimLight = new THREE.PointLight(0x7dd3fc, 2.5, 150);
     rimLight.position.set(20, 20, 50);
     scene.add(rimLight);
     const fillLight = new THREE.PointLight(0x3344ff, 0.5, 120);
@@ -262,10 +268,14 @@
 
     function defaultColor(activity) {
       let r, g, b;
-      if (activity < 0.25) { const s=activity/0.25; r=0.08+s*0.04; g=0.10+s*0.10; b=0.22+s*0.08; }
-      else if (activity < 0.5) { const s=(activity-0.25)/0.25; r=0.12+s*0.10; g=0.20+s*0.15; b=0.30-s*0.05; }
-      else if (activity < 0.75) { const s=(activity-0.5)/0.25; r=0.22+s*0.50; g=0.35+s*0.20; b=0.25-s*0.15; }
-      else { const s=(activity-0.75)/0.25; r=0.72+s*0.28; g=0.55-s*0.35; b=0.10-s*0.06; }
+      // Resting ramp: deep navy in the sulci to pale ice on the gyral crowns.
+      // The old ramp topped out in olive and orange, which fought the accent
+      // and made the whole mesh read as drab. Emotion heatmaps still use their
+      // own hotColor, so warm tones only appear when an emotion is active.
+      if (activity < 0.25) { const s=activity/0.25; r=0.05+s*0.02; g=0.08+s*0.07; b=0.18+s*0.14; }
+      else if (activity < 0.5) { const s=(activity-0.25)/0.25; r=0.07+s*0.03; g=0.15+s*0.15; b=0.32+s*0.23; }
+      else if (activity < 0.75) { const s=(activity-0.5)/0.25; r=0.10+s*0.20; g=0.30+s*0.30; b=0.55+s*0.27; }
+      else { const s=(activity-0.75)/0.25; r=0.30+s*0.40; g=0.60+s*0.28; b=0.82+s*0.18; }
       return [r, g, b];
     }
 
@@ -299,7 +309,7 @@
       // wireframe
       const wire = new THREE.LineSegments(
         new THREE.WireframeGeometry(geo),
-        new THREE.LineBasicMaterial({ color: 0xff3333, opacity: 0.02, transparent: true })
+        new THREE.LineBasicMaterial({ color: 0x7dd3fc, opacity: 0.02, transparent: true })
       );
       mesh.add(wire);
 
@@ -331,7 +341,7 @@
     }
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
     const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
-      color: 0xff3333, size: 0.5, transparent: true, opacity: 0.3, sizeAttenuation: true
+      color: 0x7dd3fc, size: 0.5, transparent: true, opacity: 0.3, sizeAttenuation: true
     }));
     scene.add(particles);
 
@@ -514,7 +524,7 @@
         const hc = EMOTIONS[currentEmotion].hotColor;
         rimLight.color.setRGB(hc[0], hc[1]*0.5, hc[2]*0.5);
       } else {
-        rimLight.color.setHex(0xff3333);
+        rimLight.color.setHex(0x7dd3fc);
       }
 
       renderer.render(scene, camera);
