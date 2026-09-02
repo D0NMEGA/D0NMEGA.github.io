@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>D0NMEGA // Neural Interface</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500&display=swap');
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    :root{--bg:#06060a;--accent:#7dd3fc;--accent-dim:rgba(125,211,252,0.06);--mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif;--heading:'Archivo',sans-serif}
+    :root{--bg:#06060a;--accent:#7dd3fc;--accent-dim:rgba(125,211,252,0.06);--mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif;--heading:'Playfair Display',Georgia,serif;--serif:'Playfair Display',Georgia,serif;--glass-edge:rgba(255,255,255,0.10)}
     body{min-height:100vh;background:var(--bg);font-family:var(--sans);color:#e0e0e0;overflow:hidden;user-select:none;-webkit-user-select:none}
 
     #brain-canvas{position:fixed;inset:0;z-index:0;cursor:grab}
@@ -28,25 +28,20 @@
     .card-wrap{position:fixed;right:5vw;top:50%;transform:translateY(-50%);z-index:5;perspective:1200px}
     .card{width:340px;transform-style:preserve-3d;will-change:transform;cursor:grab}
     .card.dragging{cursor:grabbing}
-    .card__face{padding:32px 28px;border-radius:16px;position:relative;overflow:hidden;backface-visibility:hidden;background:linear-gradient(145deg,rgba(14,14,20,0.96),rgba(8,8,12,0.98));border:1px solid rgba(125,211,252,0.12);box-shadow:0 0 0 1px rgba(255,255,255,0.02),0 30px 80px rgba(0,0,0,0.5),0 0 50px var(--accent-dim)}
+    .card__face{padding:34px 30px;border-radius:20px;position:relative;overflow:hidden;backface-visibility:hidden;background:linear-gradient(150deg,rgba(16,26,44,0.62),rgba(8,14,26,0.52));-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-edge);box-shadow:0 8px 32px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.10)}
     .card__face::after{content:'';position:absolute;inset:-2px;border-radius:18px;background:conic-gradient(from var(--glow-angle,0deg),transparent 0%,rgba(125,211,252,0.3)8%,transparent 16%,transparent 84%,rgba(125,211,252,0.15)92%,transparent 100%);z-index:-1;animation:edgeSpin 8s linear infinite;filter:blur(3px)}
     @property --glow-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
     @keyframes edgeSpin{to{--glow-angle:360deg}}
 
-    .status{display:flex;align-items:center;gap:8px;font:600 10px/1 var(--mono);color:var(--accent);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:20px}
-    .status__dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:blink 2.4s ease-in-out infinite}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-    .card__name{font:700 24px/1.1 var(--heading);color:#fff;letter-spacing:-0.03em;margin-bottom:2px}
+    .card__name{font:500 30px/1.15 var(--heading);color:#f2f6fb;letter-spacing:-0.01em;margin-bottom:4px}
     .card__handle{font:400 12px/1 var(--mono);color:var(--accent);margin-bottom:14px}
     .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(125,211,252,0.25),transparent);margin:12px 0}
-    .card__bio{font:400 12px/1.6 var(--sans);color:#888;margin-bottom:14px}
+    .card__bio{font:400 14px/1.65 var(--serif);color:#b8c4d2;margin-bottom:16px}
     .card__bio strong{color:#bbb}
     .meta{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
     .meta__row{display:flex;gap:10px;font:400 10px/1.4 var(--mono)}
-    .meta__key{color:#444;min-width:60px}
-    .meta__val{color:#999}
-    .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
-    .tag{font:400 8px/1 var(--mono);letter-spacing:0.06em;padding:4px 10px;border-radius:100px;border:1px solid rgba(125,211,252,0.18);color:var(--accent);background:var(--accent-dim)}
+    .meta__key{color:#5b6b7d;min-width:60px}
+    .meta__val{color:#a8b6c6}
     .ctas{display:flex;flex-wrap:wrap;gap:8px}
     .cta{display:inline-flex;align-items:center;gap:8px;font:500 10px/1 var(--mono);color:var(--accent);text-decoration:none;padding:8px 14px;border:1px solid rgba(125,211,252,0.25);border-radius:8px;background:var(--accent-dim);transition:all 0.3s}
     .cta:hover{background:rgba(125,211,252,0.12);box-shadow:0 0 18px rgba(125,211,252,0.15)}
@@ -62,7 +57,7 @@
     .stimulus{position:fixed;left:5vw;bottom:140px;max-width:420px;z-index:8;opacity:0;transform:translateY(10px);transition:opacity 0.5s,transform 0.5s;pointer-events:none}
     .stimulus.visible{opacity:1;transform:translateY(0)}
     .stimulus__label{font:600 9px/1 var(--mono);color:var(--accent);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px}
-    .stimulus__text{font:400 15px/1.7 var(--sans);color:#bbb}
+    .stimulus__text{font:400 17px/1.75 var(--serif);color:#c8d3e0}
     .stimulus__region{font:400 10px/1.4 var(--mono);color:#444;margin-top:10px}
 
     .brain-label{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);font:400 9px/1 var(--mono);color:#1a1a1a;letter-spacing:0.15em;text-transform:uppercase;z-index:10}
@@ -71,7 +66,7 @@
     .attr a{color:#222;text-decoration:none}
     .attr a:hover{color:var(--accent)}
 
-    @media(prefers-reduced-motion:reduce){.card__face::after,.status__dot{animation:none}}
+    @media(prefers-reduced-motion:reduce){.card__face::after{animation:none}}
     @media(max-width:900px){
       .card-wrap{position:relative;right:auto;top:auto;transform:none;margin:20px auto}
       .emo-panel{position:relative;bottom:auto}
@@ -93,7 +88,6 @@
   <div class="card-wrap">
     <div class="card" id="card">
       <div class="card__face" id="card-face">
-        <div class="status"><div class="status__dot"></div><span>ONLINE // BUILDING</span></div>
         <div class="card__name">Donovan Santine</div>
         <div class="card__handle">@D0NMEGA</div>
         <div class="divider"></div>
@@ -103,9 +97,6 @@
           <div class="meta__row"><span class="meta__key">bci</span><span class="meta__val">Fable // 2nd, Global NeuroHack 2026</span></div>
           <div class="meta__row"><span class="meta__key">research</span><span class="meta__val">REACH Equity Lab // Exposomics</span></div>
           <div class="meta__row"><span class="meta__key">stack</span><span class="meta__val">Python, NumPy, MNE, FastAPI</span></div>
-        </div>
-        <div class="tags">
-          <span class="tag">BCI</span><span class="tag">EEG</span><span class="tag">Diffusion MRI</span><span class="tag">AI Agents</span><span class="tag">Open Source</span>
         </div>
         <div class="ctas">
           <a href="https://iniaustin.org" class="cta" target="_blank" rel="noopener">iniaustin.org <span>&rarr;</span></a>
@@ -143,10 +134,10 @@
     // ---- emotion definitions ----
     const EMOTIONS = {
       happiness: {
-        label: 'MAXIMIZING HAPPINESS // Velten Induction + ANEW',
+        label: 'MAXIMIZING HAPPINESS // Velten self-referential induction',
         text: 'Life is so much fun; it seems to offer so many sources of fulfillment. I feel so content right now -- like everything in my life has come together. The people I love are healthy, I am doing exactly what I was meant to do, and every challenge I faced brought me here. I can feel it in my chest -- warm, radiating, full.',
         regions: 'vmPFC (BA 11), R superior temporal gyrus, ventral striatum, L DLPFC (BA 46)',
-        cite: 'Velten 1968; Bradley & Lang 1999 (ANEW); Lindquist et al. 2012; Kober et al. 2008',
+        cite: 'Velten 1968 present-tense self-referential statements; high-valence, high-arousal lexis per Warriner et al. 2013 (13,915 English lemmas). Coordinates from Lindquist et al. 2012; Kober et al. 2008',
         // MNI coords: [x, y, z, radius, intensity]
         centers: [
           [-44, 36, 28, 18, 1.0],    // left DLPFC (BA 46) -- lateral, visible
@@ -160,10 +151,10 @@
         hotColor: [1.0, 0.75, 0.1]
       },
       chills: {
-        label: 'INDUCING FRISSON // Wassiliwizky et al. 2017',
-        text: 'A lone cello begins in a dark hall. The melody climbs -- each phrase dissolving the one before it, building toward something you cannot name. Then the choir enters, a hundred voices becoming one, and the sound opens a door in your chest you forgot was there. Your skin prickles. Tears arrive without sadness. You are being held by something vast and invisible.',
+        label: 'INDUCING FRISSON // peak at the final line',
+        text: 'Read it aloud and slowly. A cello holds one note in an empty hall. The line climbs, each phrase dissolving the one before it. The choir enters, a hundred voices folding into one. Your skin tightens. Tears arrive without sadness. And then the sound stops, and the silence is the loudest thing you have ever heard.',
         regions: 'Ventral striatum, caudate nucleus, A1 auditory cortex (BA 41), anterior insula (BA 13)',
-        cite: 'Blood & Zatorre 2001; Wassiliwizky et al. 2017; Nusbaum & Silvia 2011',
+        cite: 'Wassiliwizky et al. 2017, Soc Cogn Affect Neurosci 12:1229 (chills cluster at poem end; goosebumps measured by EMG); Blood & Zatorre 2001',
         centers: [
           [-48, -22, 8, 18, 1.0],    // left A1 / Heschl's gyrus -- lateral
           [48, -22, 8, 18, 1.0],     // right A1 / Heschl's gyrus -- lateral
@@ -179,7 +170,7 @@
         label: 'DEEP SADNESS // Velten + Gerrards-Hesse 1994',
         text: 'Every now and then I feel so tired and gloomy that I would rather just sit than do anything. I just do not seem to be able to get going as fast as I used to. Things are worse now than when I was younger. The people I used to count on have gone quiet. I keep rereading old messages, looking for something I already know is not there anymore.',
         regions: 'Subgenual ACC (BA 25), anterior insula (BA 13), amygdala, posterior cingulate',
-        cite: 'Velten 1968; Gerrards-Hesse et al. 1994; Lindquist et al. 2012; Kober et al. 2008',
+        cite: 'Velten 1968; Gerrards-Hesse et al. 1994 (mood-induction procedure comparison). Coordinates from Lindquist et al. 2012; Kober et al. 2008',
         centers: [
           [-38, 6, 2, 16, 1.0],      // left anterior insula -- lateral
           [38, 6, 2, 16, 1.0],       // right anterior insula -- lateral
@@ -192,10 +183,10 @@
         hotColor: [0.4, 0.15, 0.7]
       },
       fear: {
-        label: 'INDUCING FEAR // Spielberger STAI paradigm',
+        label: 'INDUCING FEAR // imminent, inescapable threat',
         text: 'You are walking alone at night down a dark, unfamiliar street. You hear footsteps behind you that speed up when you speed up. Your heart slams. You turn a corner and the street dead-ends at a wall. The footsteps stop. The silence is worse. You turn around, and something is standing between you and the only way out.',
         regions: 'Amygdala (bilateral), anterior insula (BA 13), dorsal ACC (BA 32), visual cortex',
-        cite: 'Spielberger 1983; Lindquist et al. 2012; Saarimaki et al. 2016; Lench et al. 2011',
+        cite: 'Second-person threat narrative: proximity, pursuit and blocked escape. Coordinates from Lindquist et al. 2012; Saarimaki et al. 2016',
         centers: [
           [-38, 6, 2, 18, 1.0],      // left anterior insula -- lateral
           [38, 6, 2, 18, 1.0],       // right anterior insula -- lateral
@@ -209,9 +200,9 @@
       },
       awe: {
         label: 'INSPIRING AWE // Keltner & Haidt 2003; Piff et al. 2015',
-        text: 'You stand at the edge and look up. The trees are 200 feet tall and older than any nation. The canopy filters the light into cathedral beams. You feel the scale of it press down on your sense of self until you are not a person anymore -- just a witness. Something vast and ancient is looking back at you through the bark and the silence, and you do not want to leave.',
+        text: 'You stand at the edge and look up. The trees are 200 feet tall and were already old when your language was invented. The scale does not fit anything you brought with you, so your mind gives up trying to file it. What is left is very small and very quiet, and not entirely comfortable. You are a witness to something that will not notice when you are gone.',
         regions: 'TPJ (BA 39/40), dmPFC (BA 9), precuneus (BA 7), anterior insula',
-        cite: 'Keltner & Haidt 2003; Piff et al. 2015; Yaden et al. 2017; Stellar et al. 2017',
+        cite: 'Piff et al. 2015, J Pers Soc Psychol 108:883 (vastness beyond current frames, the small self); Stellar et al. 2024, Affect Sci 5:160 (awe is a mixed emotion, tinged with fear)',
         centers: [
           [-52, -56, 26, 18, 1.0],   // left TPJ (BA 39) -- lateral
           [52, -56, 26, 18, 1.0],    // right TPJ -- lateral
@@ -441,7 +432,7 @@
       time += 0.01;
 
       // brain rotation -- Z axis spin (nose-to-tail axis in lateral view)
-      if (!brainDrag) { brainTgtY += 0.015; }
+      if (!brainDrag) { brainTgtY += 0.0028; }   // ~37s per revolution
       brainRotY += (brainTgtY-brainRotY)*0.06;
       brainRotX += (brainTgtX-brainRotX)*0.06;
       brainGroup.rotation.x = brainRotX;
